@@ -11,7 +11,7 @@ void SDL_Callback(void *data, uint8_t *stream, int len) {
 
 	ModPlayerStatus_t *mp = RenderMOD(buf, len / (sizeof(short) * 2));
 
-	printf("\rRow %02d, order %02d (pattern %02d) @ speed %d", mp->row, mp->order, mp->ordertable[mp->order], mp->speed);
+	printf("\rRow %02d, order %02d/%02d (pattern %02d) @ speed %d", mp->row, mp->order, mp->orders - 1, mp->ordertable[mp->order], mp->speed);
 	fflush(stdout);
 }
 
