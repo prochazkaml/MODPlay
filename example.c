@@ -1,10 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #include <SDL/SDL.h>
 
-#include "mod.h"
+#include "modplay.h"
 
 void SDL_Callback(void *data, uint8_t *stream, int len) {
 	short *buf = (short *) stream;
