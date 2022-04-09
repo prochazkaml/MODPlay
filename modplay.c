@@ -37,7 +37,7 @@ void ProcessMOD() {
 				mp.note[i] = note_tmp;
 
 				if(eff_tmp != 0x3 && eff_tmp != 5) {
-					mp.paula[i].currentptr = 0;
+					mp.paula[i].age = mp.paula[i].currentptr = 0;
 					mp.paula[i].period = mp.note[i] = note_tmp;
 					mp.paula[i].period -= mp.samples[mp.sample[i]].finetune;
 				}
@@ -66,6 +66,7 @@ void ProcessMOD() {
 
 				case 0x9:
 					mp.paula[i].currentptr = effval_tmp << 24;
+					mp.paula[i].age = 0;
 					break;
 
 				case 0xB:
@@ -203,7 +204,7 @@ void ProcessMOD() {
 			case 0xE:
 				switch(effval_tmp >> 4) {
 					case 0x9:
-						if(mp.tick && !(mp.tick % (effval_tmp & 0xF))) mp.paula[i].currentptr = 0;
+						if(mp.tick && !(mp.tick % (effval_tmp & 0xF))) mp.paula[i].age = mp.paula[i].currentptr = 0;
 						break;
 
 					case 0xC:
@@ -292,6 +293,8 @@ ModPlayerStatus_t *RenderMOD(short *buf, int len) {
 					} else {
 						mp.paula[ch].currentptr -= mp.paula[ch].looplength << 17;
 					}
+				} else {
+					mp.paula[ch].age++;
 				}
 			}
 		}

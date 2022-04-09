@@ -4,6 +4,7 @@
 
 typedef struct {
 	const int8_t *sample;
+	uint32_t age;
 	uint32_t currentptr;
 	uint16_t length;
 	uint16_t looplength;
