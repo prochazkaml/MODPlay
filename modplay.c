@@ -236,6 +236,8 @@ void ProcessMOD() {
 }
 
 ModPlayerStatus_t *RenderMOD(short *buf, int len) {
+	memset(buf, 0, len * 4);
+
 	for(int s = 0; s < len; s++) {
 		// Process the tick, if necessary
 
@@ -270,11 +272,11 @@ ModPlayerStatus_t *RenderMOD(short *buf, int len) {
 				// Distribute the rendered sample across both output channels
 
 				if((ch & 3) == 1 || (ch & 3) == 2) {
-					buf[s * 2] += sample / 6;
-					buf[s * 2 + 1] += sample / 2;
+					buf[s * 2] += sample / 3;
+					buf[s * 2 + 1] += sample;
 				} else {
-					buf[s * 2] += sample / 2;
-					buf[s * 2 + 1] += sample / 6;
+					buf[s * 2] += sample;
+					buf[s * 2 + 1] += sample / 3;
 				}
 
 				// Advance to the next required sample
@@ -298,7 +300,11 @@ ModPlayerStatus_t *RenderMOD(short *buf, int len) {
 	return &mp;
 }
 
-void InitMOD(uint8_t *mod, int samplerate) {
+int InitMOD(uint8_t *mod, int samplerate) {
+	if(memcmp(mod + 1080, "M.K.", 4)) {
+		return 0;
+	}
+
 	int i;
 
 	memset(&mp, 0, sizeof(mp));
@@ -349,4 +355,6 @@ void InitMOD(uint8_t *mod, int samplerate) {
 	}
 
 	mp.speed = 6; mp.audiospeed = mp.samplerate / 50; mp.audiotick = 0;
+
+	return 1;
 }

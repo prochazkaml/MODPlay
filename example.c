@@ -5,18 +5,19 @@
 
 #include "modplay.h"
 
+#define SAMPLERATE 44100
+
 void SDL_Callback(void *data, uint8_t *stream, int len) {
 	short *buf = (short *) stream;
-	memset(buf, 0, len);
 
 	ModPlayerStatus_t *mp = RenderMOD(buf, len / (sizeof(short) * 2));
 
-	printf("\rRow %02d, order %02d/%02d (pattern %02d) @ speed %d", mp->row, mp->order, mp->orders - 1, mp->ordertable[mp->order], mp->speed);
+	printf("\r\e[2KRow %02d, order %02d/%02d (pattern %02d) @ speed %d", mp->row, mp->order, mp->orders - 1, mp->ordertable[mp->order], mp->speed);
 	fflush(stdout);
 }
 
 SDL_AudioSpec sdl_audio = {
-	.freq = 44100,
+	.freq = SAMPLERATE,
 	.format = AUDIO_S16,
 	.channels = 2,
 	.samples = 1024,
@@ -44,9 +45,12 @@ int main(int argc, char *argv[]) {
 	fread(tune, 1, tune_len, f);
 	fclose(f);
 
-	printf("Playing %s...\n", argv[1]);
+	if(!InitMOD(tune, SAMPLERATE)) {
+		printf("Invalid file!\n");
+		exit(1);
+	}
 
-	InitMOD(tune, 44100);
+	printf("Playing %s...\n", argv[1]);
 
 	SDL_Init(SDL_INIT_AUDIO);
 	SDL_OpenAudio(&sdl_audio, 0);
