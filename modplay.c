@@ -3,7 +3,7 @@
 
 ModPlayerStatus_t mp;
 
-void ProcessMOD() {
+ModPlayerStatus_t *ProcessMOD() {
 	int i;
 
 	const int arplookup[16] = {
@@ -238,6 +238,8 @@ void ProcessMOD() {
 			}
 		}
 	}
+
+	return &mp;
 }
 
 ModPlayerStatus_t *RenderMOD(short *buf, int len) {
