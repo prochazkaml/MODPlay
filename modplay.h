@@ -10,6 +10,7 @@ typedef struct {
 	uint16_t looplength;
 	int16_t period;
 	int8_t volume;
+	int8_t muted;
 } PaulaChannel_t;
 
 typedef struct {

@@ -276,12 +276,14 @@ ModPlayerStatus_t *RenderMOD(short *buf, int len) {
 
 				// Distribute the rendered sample across both output channels
 
-				if((ch & 3) == 1 || (ch & 3) == 2) {
-					buf[s * 2] += sample / 3;
-					buf[s * 2 + 1] += sample;
-				} else {
-					buf[s * 2] += sample;
-					buf[s * 2 + 1] += sample / 3;
+				if(!mp.paula[ch].muted) {
+					if((ch & 3) == 1 || (ch & 3) == 2) {
+						buf[s * 2] += sample / 3;
+						buf[s * 2 + 1] += sample;
+					} else {
+						buf[s * 2] += sample;
+						buf[s * 2 + 1] += sample / 3;
+					}
 				}
 
 				// Advance to the next required sample
