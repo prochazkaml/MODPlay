@@ -24,6 +24,10 @@ void ProcessMOD() {
 			int eff_tmp = cell[2] & 0x0F;
 			int effval_tmp = cell[3];
 
+			if(mp.eff[i] == 0 && mp.effval[i] != 0) {
+				mp.paula[i].period = mp.note[i] - mp.samples[mp.sample[i]].finetune;
+			}
+
 			if(sample_tmp) {
 				mp.sample[i] = sample_tmp - 1;
 				
@@ -294,6 +298,7 @@ ModPlayerStatus_t *RenderMOD(short *buf, int len) {
 						mp.paula[ch].currentptr -= mp.paula[ch].looplength << 17;
 					}
 				} else {
+					if(mp.paula[ch].age < INT32_MAX)
 					mp.paula[ch].age++;
 				}
 			}
@@ -303,9 +308,9 @@ ModPlayerStatus_t *RenderMOD(short *buf, int len) {
 	return &mp;
 }
 
-int InitMOD(uint8_t *mod, int samplerate) {
+ModPlayerStatus_t *InitMOD(uint8_t *mod, int samplerate) {
 	if(memcmp(mod + 1080, "M.K.", 4)) {
-		return 0;
+		return NULL;
 	}
 
 	int i;
@@ -359,5 +364,9 @@ int InitMOD(uint8_t *mod, int samplerate) {
 
 	mp.speed = 6; mp.audiospeed = mp.samplerate / 50; mp.audiotick = 0;
 
-	return 1;
+	for(int i = 0; i < 4; i++) {
+		mp.paula[i].age = INT32_MAX;
+	}
+
+	return &mp;
 }

@@ -35,5 +35,5 @@ typedef struct {
 	PaulaChannel_t paula[PaulaNumChannels];
 } ModPlayerStatus_t;
 
-int InitMOD(uint8_t *mod, int samplerate);
+ModPlayerStatus_t *InitMOD(uint8_t *mod, int samplerate);
 ModPlayerStatus_t *RenderMOD(short *buf, int len);
