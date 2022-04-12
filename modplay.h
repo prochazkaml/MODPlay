@@ -1,7 +1,5 @@
 #include <stdint.h>
 
-#define PaulaNumChannels 4
-
 typedef struct {
 	const int8_t *sample;
 	uint32_t age;
@@ -28,12 +26,13 @@ typedef struct {
 		tick, speed, arp, skiporderrequest,
 		samplerate, paularate, audiospeed, audiotick;
 
-	int note[4], sample[4], eff[4], effval[4], slideamount[4], slidenote[4];
+	int note[4], sample[4], eff[4], effval[4];
+	int slideamount[4], slidenote[4], sampleoffset[4];
 	
 	uint8_t *patterndata, *ordertable;
 	Sample samples[31];
 
-	PaulaChannel_t paula[PaulaNumChannels];
+	PaulaChannel_t paula[4];
 } ModPlayerStatus_t;
 
 ModPlayerStatus_t *InitMOD(uint8_t *mod, int samplerate);

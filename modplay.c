@@ -69,7 +69,13 @@ ModPlayerStatus_t *ProcessMOD() {
 					break;
 
 				case 0x9:
-					mp.paula[i].currentptr = effval_tmp << 24;
+					if(effval_tmp) {
+						mp.paula[i].currentptr = effval_tmp << 24;
+						mp.sampleoffset[i] = effval_tmp;
+					} else {
+						mp.paula[i].currentptr = mp.sampleoffset[i] << 24;
+					}
+
 					mp.paula[i].age = 0;
 					break;
 

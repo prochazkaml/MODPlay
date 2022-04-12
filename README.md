@@ -1,5 +1,5 @@
 # MODPlay
-Yet another simple (and incomplete) 4-channel MOD player library written in C.
+Yet another simple (and incomplete) 4-channel MOD player library written in C. But I don't care, because this one's _mine_.
 
 To hear for yourself how it sounds, you may visit [this website](https://mod.prochazka.ml/), which uses this exact library (compiled to WebAssembly with Emscripten).
 There are several examples available to pick from, but you may also upload your own files.
@@ -34,7 +34,7 @@ The following list was taken from the [OpenMPT wiki](https://wiki.openmpt.org/Ma
 |`6xy`|Volume Slide + Vibrato|Volume + Pitch|Partial (only volume affected)|
 |`7xy`|Tremolo|Volume|-|
 |`8xx`|Set Panning|Panning|-|
-|`9xx`|Sample Offset|Other|Partial (does work, but no memory)|
+|`9xx`|Sample Offset|Other|✓|
 |`Axy`|Volume Slide|Volume|✓|
 |`Bxx`|Position Jump|Global|✓|
 |`Cxx`|Set Volume|Volume|✓|
