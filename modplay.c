@@ -1,4 +1,5 @@
 #include "modplay.h"
+#include "tables.h"
 #include <string.h>
 
 ModPlayerStatus_t mp;
@@ -19,13 +20,13 @@ ModPlayerStatus_t *ProcessMOD() {
 		for(i = 0; i < 4; i++) {
 			uint8_t *cell = mp.patterndata + mp.ordertable[mp.order] * (64 * 16) + mp.row * 16 + i * 4;
 
-			int note_tmp = ((cell[0] & 0x0F) << 8) | cell[1];
-			int sample_tmp = (cell[0] & 0xF0) | ((cell[2] & 0xF0) >> 4);
-			int eff_tmp = cell[2] & 0x0F;
+			int note_tmp = cell[0];
+			int sample_tmp = cell[1];
+			int eff_tmp = cell[2];
 			int effval_tmp = cell[3];
 
 			if(mp.eff[i] == 0 && mp.effval[i] != 0) {
-				mp.paula[i].period = mp.note[i] - mp.samples[mp.sample[i]].finetune;
+				mp.paula[i].period = mp.note[i];
 			}
 
 			if(sample_tmp) {
@@ -38,12 +39,13 @@ ModPlayerStatus_t *ProcessMOD() {
 			}
 
 			if(note_tmp) {
+				note_tmp = period_tables[mp.samples[mp.sample[i]].finetune][note_tmp - 1];
+
 				mp.note[i] = note_tmp;
 
 				if(eff_tmp != 0x3 && eff_tmp != 5) {
 					mp.paula[i].age = mp.paula[i].currentptr = 0;
 					mp.paula[i].period = mp.note[i] = note_tmp;
-					mp.paula[i].period -= mp.samples[mp.sample[i]].finetune;
 				}
 			}
 
@@ -57,11 +59,9 @@ ModPlayerStatus_t *ProcessMOD() {
 
 				case 0x3:
 					if(effval_tmp) mp.slideamount[i] = effval_tmp;
-	//						if(note_tmp) slidenote[i] = note_tmp - samples[sample[i]].finetune;
-	//						break;
 
 				case 0x5:
-					mp.slidenote[i] = mp.note[i] - mp.samples[mp.sample[i]].finetune;
+					mp.slidenote[i] = mp.note[i];
 					break;
 
 				case 0xC:
@@ -145,7 +145,7 @@ ModPlayerStatus_t *ProcessMOD() {
 						break;
 				}
 
-				mp.paula[i].period = mp.arp - mp.samples[mp.sample[i]].finetune;
+				mp.paula[i].period = mp.arp;
 				break;
 
 			case 0x1:
@@ -317,8 +317,6 @@ ModPlayerStatus_t *InitMOD(uint8_t *mod, int samplerate) {
 		return NULL;
 	}
 
-	int i;
-
 	memset(&mp, 0, sizeof(mp));
 
 	mp.samplerate = samplerate;
@@ -329,7 +327,7 @@ ModPlayerStatus_t *InitMOD(uint8_t *mod, int samplerate) {
 
 	mp.maxpattern = 0;
 
-	for(i = 0; i < 128; i++) {
+	for(int i = 0; i < 128; i++) {
 		if(mp.ordertable[i] >= mp.maxpattern) mp.maxpattern = mp.ordertable[i];
 	}
 	mp.maxpattern++;
@@ -337,7 +335,7 @@ ModPlayerStatus_t *InitMOD(uint8_t *mod, int samplerate) {
 	int8_t *samplemem = mod + 1084 + 1024 * mp.maxpattern;
 	mp.patterndata = mod + 1084;
 
-	for(i = 0; i < 31; i++) {
+	for(int i = 0; i < 31; i++) {
 		uint8_t *sample = mod + 20 + i * 30;
 
 		mp.samples[i].length = (sample[22] << 8) | sample[23];
@@ -363,6 +361,45 @@ ModPlayerStatus_t *InitMOD(uint8_t *mod, int samplerate) {
 			mp.samples[i].looplength = mp.samples[i].actuallength - mp.samples[i].looppoint;
 		} else {
 			mp.samples[i].looplength = mp.samples[i].actuallength - mp.samples[i].looppoint;
+		}
+	}
+
+	for(int pat = 0; pat < mp.maxpattern; pat++) {
+		for(int row = 0; row < 64; row++) {
+			for(int col = 0; col < 4; col++) {
+				uint8_t *cell = mp.patterndata + pat * (64 * 16) + row * 16 + col * 4;
+
+				int period = ((cell[0] & 0x0F) << 8) | cell[1];
+				int sample = (cell[0] & 0xF0) | ((cell[2] & 0xF0) >> 4);
+				int eff = cell[2] & 0x0F;
+				int effval = cell[3];
+
+				if(period == 0) {
+					cell[0] = 0;
+				} else {
+					int note = 0;
+
+					for(int i = 1; i < 36; i++) {
+						if(period_tables[0][i] <= period) {
+							int low = period - period_tables[0][i];
+							int high = period_tables[0][i - 1] - period;
+
+							if(low < high)
+								note = i;
+							else
+								note = i - 1;
+
+							break;
+						}
+					}
+
+					cell[0] = note + 1;
+				}
+
+				cell[1] = sample;
+				cell[2] = eff;
+				cell[3] = effval;
+			}
 		}
 	}
 
