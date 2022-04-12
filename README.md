@@ -42,7 +42,7 @@ The following list was taken from the [OpenMPT wiki](https://wiki.openmpt.org/Ma
 |`E0x`|Set Filter|Other|- (and never will be, there is no filter to begin with)|
 |`E1x`|Fine Portamento Up|Pitch|✓|
 |`E2x`|Fine Portamento Down|Pitch|✓|
-|`E3x`|Glissando|Pitch|-|
+|`E3x`|Glissando|Pitch|- (not widely supported anyway)|
 |`E4x`|Set Vibrato Waveform|Pitch|-|
 |`E5x`|Set Finetune|Pitch|✓|
 |`E60`|Pattern Loop Start|Global|✓|
@@ -53,7 +53,7 @@ The following list was taken from the [OpenMPT wiki](https://wiki.openmpt.org/Ma
 |`EAx`|Fine Volume Slide Up|Volume|✓|
 |`EBx`|Fine Volume Slide Down|Volume|✓|
 |`ECx`|Note Cut|Other|✓|
-|`EDx`|Note Delay|Other|-|
+|`EDx`|Note Delay|Other|✓|
 |`EEx`|Pattern Delay|Global|✓|
 |`EFx`|Invert Loop|Other|-|
 |`Fxx`|Set Speed / Tempo|Global|✓|

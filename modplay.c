@@ -43,9 +43,9 @@ ModPlayerStatus_t *ProcessMOD() {
 
 				mp.note[i] = note_tmp;
 
-				if(eff_tmp != 0x3 && eff_tmp != 5) {
+				if(eff_tmp != 0x3 && eff_tmp != 0x5 && (eff_tmp != 0xE || (effval_tmp & 0xF0) != 0xD0)) {
 					mp.paula[i].age = mp.paula[i].currentptr = 0;
-					mp.paula[i].period = mp.note[i] = note_tmp;
+					mp.paula[i].period = mp.note[i];
 				}
 			}
 
@@ -241,6 +241,13 @@ ModPlayerStatus_t *ProcessMOD() {
 
 					case 0xC:
 						if(mp.tick >= (effval_tmp & 0xF)) mp.paula[i].volume = 0;
+						break;
+
+					case 0xD:
+						if(mp.tick == (effval_tmp & 0xF)) {
+							mp.paula[i].age = mp.paula[i].currentptr = 0;
+							mp.paula[i].period = mp.note[i];
+						}
 						break;
 				}
 
