@@ -45,8 +45,8 @@ The following list was taken from the [OpenMPT wiki](https://wiki.openmpt.org/Ma
 |`E3x`|Glissando|Pitch|-|
 |`E4x`|Set Vibrato Waveform|Pitch|-|
 |`E5x`|Set Finetune|Pitch|✓|
-|`E60`|Pattern Loop Start|Global|-|
-|`E6x`|Pattern Loop|Global|-|
+|`E60`|Pattern Loop Start|Global|✓|
+|`E6x`|Pattern Loop|Global|✓|
 |`E7x`|Set Tremolo Waveform|Volume|-|
 |`E8x`|Set Panning|Panning|-|
 |`E9x`|Retrigger|Other|✓|

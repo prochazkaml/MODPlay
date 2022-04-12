@@ -105,6 +105,21 @@ ModPlayerStatus_t *ProcessMOD() {
 							mp.paula[i].period += effval_tmp & 0xF;
 							break;
 						
+						case 0x6:
+							if(effval_tmp & 0xF) {
+								if(!mp.patloopcycle)
+									mp.patloopcycle = (effval_tmp & 0xF) + 1;
+
+								if(mp.patloopcycle > 1) {
+									mp.skiporderrequest = mp.order;
+									mp.skiporderdestrow = mp.patlooprow;
+								}
+
+								mp.patloopcycle--;
+							} else {
+								mp.patlooprow = mp.row;
+							}
+
 						case 0xA:
 							mp.paula[i].volume += effval_tmp & 0xF;
 							if(mp.paula[i].volume > 0x40) mp.paula[i].volume = 0x40;
