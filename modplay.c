@@ -348,8 +348,6 @@ ModPlayerStatus_t *InitMOD(uint8_t *mod, int samplerate) {
 		mp.samples[i].looppoint = (sample[26] << 8) | sample[27];
 		mp.samples[i].actuallength = (sample[28] << 8) | sample[29];
 
-		if(mp.samples[i].finetune & 0x08) mp.samples[i].finetune |= 0xF0;
-
 		mp.samples[i].data = samplemem;
 		samplemem += mp.samples[i].length * 2;
 
