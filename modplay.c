@@ -7,13 +7,6 @@ ModPlayerStatus_t mp;
 ModPlayerStatus_t *ProcessMOD() {
 	int i;
 
-	const int arplookup[16] = {
-		65536, 61858, 58386, 55109,
-		52016, 49096, 46341, 43740,
-		41285, 38968, 36781, 34716,
-		32768, 30929, 29193, 27554
-	};
-
 	if(mp.tick == 0) {
 		mp.skiporderrequest = -1;
 
@@ -137,11 +130,11 @@ ModPlayerStatus_t *ProcessMOD() {
 						break;
 
 					case 1:
-						mp.arp = (mp.note[i] * arplookup[effval_tmp >> 4]) >> 16;
+						mp.arp = (mp.note[i] * arpeggio_table[effval_tmp >> 4]) >> 16;
 						break;
 
 					case 2:
-						mp.arp = (mp.note[i] * arplookup[effval_tmp & 0xF]) >> 16;
+						mp.arp = (mp.note[i] * arpeggio_table[effval_tmp & 0xF]) >> 16;
 						break;
 				}
 
