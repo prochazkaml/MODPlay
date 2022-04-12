@@ -44,7 +44,7 @@ The following list was taken from the [OpenMPT wiki](https://wiki.openmpt.org/Ma
 |`E2x`|Fine Portamento Down|Pitch|✓|
 |`E3x`|Glissando|Pitch|-|
 |`E4x`|Set Vibrato Waveform|Pitch|-|
-|`E5x`|Set Finetune|Pitch|-|
+|`E5x`|Set Finetune|Pitch|✓|
 |`E60`|Pattern Loop Start|Global|-|
 |`E6x`|Pattern Loop|Global|-|
 |`E7x`|Set Tremolo Waveform|Volume|-|

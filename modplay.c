@@ -32,7 +32,14 @@ ModPlayerStatus_t *ProcessMOD() {
 			}
 
 			if(note_tmp) {
-				note_tmp = period_tables[mp.samples[mp.sample[i]].finetune][note_tmp - 1];
+				char finetune;
+
+				if(eff_tmp == 0xE && (effval_tmp & 0xF0) == 0x50)
+					finetune = effval_tmp & 0xF;
+				else
+					finetune = mp.samples[mp.sample[i]].finetune;
+					
+				note_tmp = period_tables[finetune][note_tmp - 1];
 
 				mp.note[i] = note_tmp;
 
