@@ -38,7 +38,7 @@ The following list was taken from the [OpenMPT wiki](https://wiki.openmpt.org/Ma
 |`Axy`|Volume Slide|Volume|✓|
 |`Bxx`|Position Jump|Global|✓|
 |`Cxx`|Set Volume|Volume|✓|
-|`Dxx`|Pattern Break|Global|Partial (does not honour the line number)|
+|`Dxx`|Pattern Break|Global|✓|
 |`E0x`|Set Filter|Other|- (and never will be, there is no filter to begin with)|
 |`E1x`|Fine Portamento Up|Pitch|✓|
 |`E2x`|Fine Portamento Down|Pitch|✓|

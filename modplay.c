@@ -50,9 +50,6 @@ ModPlayerStatus_t *ProcessMOD() {
 			}
 
 			if(eff_tmp || effval_tmp) switch(eff_tmp) {
-				case 0x0: case 0xA: case 0x4: case 0x6:
-					break;
-
 				case 0x1: case 0x2:
 					if(effval_tmp) mp.slideamount[i] = effval_tmp;
 					break;
@@ -80,22 +77,26 @@ ModPlayerStatus_t *ProcessMOD() {
 					break;
 
 				case 0xB:
+					if(effval_tmp >= mp.orders) effval_tmp = 0;
+
 					mp.skiporderrequest = effval_tmp;
 					break;
 
 				case 0xD:
-					if(mp.order + 1 < mp.orders)
-						mp.skiporderrequest = mp.order + 1;
-					else
-						mp.skiporderrequest = 0;
+					if(mp.skiporderrequest < 0) {
+						if(mp.order + 1 < mp.orders)
+							mp.skiporderrequest = mp.order + 1;
+						else
+							mp.skiporderrequest = 0;
+					}
 
+					if(effval_tmp > 0x3F) effval_tmp = 0;
+
+					mp.skiporderdestrow = effval_tmp;
 					break;
 
 				case 0xE:
 					switch(effval_tmp >> 4) {
-						case 0x0: case 0x9: case 0xC:
-							break;
-
 						case 0x1:
 							mp.paula[i].period -= effval_tmp & 0xF;
 							break;
@@ -235,8 +236,10 @@ ModPlayerStatus_t *ProcessMOD() {
 		mp.tick = 0;
 
 		if(mp.skiporderrequest >= 0) {
-			mp.row = 0;
+			mp.row = mp.skiporderdestrow;
 			mp.order = mp.skiporderrequest;
+
+			mp.skiporderdestrow = 0;
 			mp.skiporderrequest = -1;
 		} else {
 			mp.row++;
