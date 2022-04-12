@@ -219,7 +219,7 @@ ModPlayerStatus_t *ProcessMOD() {
 				break;
 		}
 
-		if(mp.paula[i].period < period_tables[0][3*12-1]) {
+		if(mp.paula[i].period < period_tables[0][3*12-1] && mp.paula[i].period != 0) {
 			mp.paula[i].period = period_tables[0][3*12-1];
 		}
 	}
