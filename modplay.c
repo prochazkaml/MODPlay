@@ -129,6 +129,10 @@ ModPlayerStatus_t *ProcessMOD() {
 							mp.paula[i].volume -= effval_tmp & 0xF;
 							if(mp.paula[i].volume < 0x00) mp.paula[i].volume = 0x00;
 							break;
+
+						case 0xE:
+							mp.maxtick *= ((effval_tmp & 0xF) + 1);
+							break;
 					}
 					break;
 
@@ -247,8 +251,9 @@ ModPlayerStatus_t *ProcessMOD() {
 	}
 
 	mp.tick++;
-	if(mp.tick >= mp.speed) {
+	if(mp.tick >= mp.maxtick) {
 		mp.tick = 0;
+		mp.maxtick = mp.speed;
 
 		if(mp.skiporderrequest >= 0) {
 			mp.row = mp.skiporderdestrow;
@@ -429,7 +434,7 @@ ModPlayerStatus_t *InitMOD(uint8_t *mod, int samplerate) {
 		}
 	}
 
-	mp.speed = 6; mp.audiospeed = mp.samplerate / 50; mp.audiotick = 0;
+	mp.maxtick = mp.speed = 6; mp.audiospeed = mp.samplerate / 50; mp.audiotick = 0;
 
 	for(int i = 0; i < 4; i++) {
 		mp.paula[i].age = INT32_MAX;

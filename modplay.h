@@ -22,7 +22,7 @@ typedef struct {
 } Sample;
 
 typedef struct {
-	int orders, maxpattern, order, row, tick, speed, arp,
+	int orders, maxpattern, order, row, tick, maxtick, speed, arp,
 		skiporderrequest, skiporderdestrow,
 		patlooprow, patloopcycle,
 		samplerate, paularate, audiospeed, audiotick;

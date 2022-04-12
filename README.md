@@ -54,6 +54,6 @@ The following list was taken from the [OpenMPT wiki](https://wiki.openmpt.org/Ma
 |`EBx`|Fine Volume Slide Down|Volume|✓|
 |`ECx`|Note Cut|Other|✓|
 |`EDx`|Note Delay|Other|-|
-|`EEx`|Pattern Delay|Global|-|
+|`EEx`|Pattern Delay|Global|✓|
 |`EFx`|Invert Loop|Other|-|
 |`Fxx`|Set Speed / Tempo|Global|✓|
