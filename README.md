@@ -33,7 +33,7 @@ The following list was taken from the [OpenMPT wiki](https://wiki.openmpt.org/Ma
 |`5xy`|Volume Slide + Tone Portamento|Volume + Pitch|✓|
 |`6xy`|Volume Slide + Vibrato|Volume + Pitch|Partial (only volume affected)|
 |`7xy`|Tremolo|Volume|-|
-|`8xx`|Set Panning|Panning|-|
+|`8xx`|Set Panning|Panning|- (non-standard)|
 |`9xx`|Sample Offset|Other|✓|
 |`Axy`|Volume Slide|Volume|✓|
 |`Bxx`|Position Jump|Global|✓|
@@ -48,12 +48,12 @@ The following list was taken from the [OpenMPT wiki](https://wiki.openmpt.org/Ma
 |`E60`|Pattern Loop Start|Global|✓|
 |`E6x`|Pattern Loop|Global|✓|
 |`E7x`|Set Tremolo Waveform|Volume|-|
-|`E8x`|Set Panning|Panning|-|
+|`E8x`|Set Panning|Panning|- (non-standard)|
 |`E9x`|Retrigger|Other|✓|
 |`EAx`|Fine Volume Slide Up|Volume|✓|
 |`EBx`|Fine Volume Slide Down|Volume|✓|
 |`ECx`|Note Cut|Other|✓|
 |`EDx`|Note Delay|Other|✓|
 |`EEx`|Pattern Delay|Global|✓|
-|`EFx`|Invert Loop|Other|-|
+|`EFx`|Invert Loop|Other|- (noone is sure what it even does)|
 |`Fxx`|Set Speed / Tempo|Global|✓|
