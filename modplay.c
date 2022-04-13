@@ -50,10 +50,6 @@ ModPlayerStatus_t *ProcessMOD() {
 			}
 
 			if(eff_tmp || effval_tmp) switch(eff_tmp) {
-				case 0x1: case 0x2:
-					if(effval_tmp) mp.slideamount[i] = effval_tmp;
-					break;
-
 				case 0x3:
 					if(effval_tmp) mp.slideamount[i] = effval_tmp;
 
@@ -140,10 +136,9 @@ ModPlayerStatus_t *ProcessMOD() {
 					if(effval_tmp < 0x20) {
 						mp.maxtick = (mp.maxtick / mp.speed) * effval_tmp;
 						mp.speed = effval_tmp;
-					}
-
-					if(effval_tmp >= 0x20)
+					} else {
 						mp.audiospeed = mp.samplerate * 125 / effval_tmp / 50;
+					}
 
 					break;
 			}
@@ -177,12 +172,10 @@ ModPlayerStatus_t *ProcessMOD() {
 				break;
 
 			case 0x1:
-				if(!effval_tmp) effval_tmp = mp.slideamount[i];
 				if(mp.tick) mp.paula[i].period -= effval_tmp;
 				break;
 
 			case 0x2:
-				if(!effval_tmp) effval_tmp = mp.slideamount[i];
 				if(mp.tick) mp.paula[i].period += effval_tmp;
 				break;
 
@@ -303,24 +296,24 @@ ModPlayerStatus_t *RenderMOD(short *buf, int len) {
 			if(mp.paula[ch].sample) {
 				// Perform linear interpolation on the sample (otherwise it will sound like crap)
 
-				uint32_t nextptr = mp.paula[ch].currentptr + 0x10000;
-				
-				if((nextptr >> 17) >= mp.paula[ch].length &&
-					mp.paula[ch].looplength != 0)
-
-					nextptr -= mp.paula[ch].looplength << 17;
-
-				int sample1 = mp.paula[ch].sample[mp.paula[ch].currentptr >> 16] * mp.paula[ch].volume;
-				int sample2 = mp.paula[ch].sample[nextptr >> 16] * mp.paula[ch].volume;
-
-				short sample = (sample1 * (0x10000 - (nextptr & 0xFFFF)) +
-					sample2 * (nextptr & 0xFFFF)) / 0x10000;
-
-	//			short sample = mp.paula[ch].sample[mp.paula[ch].currentptr >> 16] * mp.paula[ch].volume;
-
-				// Distribute the rendered sample across both output channels
-
 				if(!mp.paula[ch].muted) {
+					uint32_t nextptr = mp.paula[ch].currentptr + 0x10000;
+					
+					if((nextptr >> 17) >= mp.paula[ch].length &&
+						mp.paula[ch].looplength != 0)
+
+						nextptr -= mp.paula[ch].looplength << 17;
+
+					int sample1 = mp.paula[ch].sample[mp.paula[ch].currentptr >> 16] * mp.paula[ch].volume;
+					int sample2 = mp.paula[ch].sample[nextptr >> 16] * mp.paula[ch].volume;
+
+					short sample = (sample1 * (0x10000 - (nextptr & 0xFFFF)) +
+						  sample2 * (nextptr & 0xFFFF)) / 0x10000;
+
+					// short sample = mp.paula[ch].sample[mp.paula[ch].currentptr >> 16] * mp.paula[ch].volume;
+
+					// Distribute the rendered sample across both output channels
+
 					if((ch & 3) == 1 || (ch & 3) == 2) {
 						buf[s * 2] += sample / 3;
 						buf[s * 2 + 1] += sample;
