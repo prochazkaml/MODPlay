@@ -436,10 +436,64 @@ ModPlayerStatus_t *InitMOD(uint8_t *mod, int samplerate) {
 		}
 	}
 
-	mp.maxtick = mp.speed = 6; mp.audiospeed = mp.samplerate / 50; mp.audiotick = 0;
+	mp.maxtick = mp.speed = 6; mp.audiospeed = mp.samplerate / 50;
 
 	for(int i = 0; i < 4; i++) {
 		mp.paula[i].age = INT32_MAX;
+	}
+
+	return &mp;
+}
+
+ModPlayerStatus_t *JumpMOD(int order) {
+	int neworder = mp.order;
+
+	ModPlayerStatus_t old_mp = mp;
+
+	memset(&mp, 0, sizeof(mp));
+
+	mp.orders = old_mp.orders;
+	mp.maxpattern = old_mp.maxpattern;
+	mp.samplerate = old_mp.samplerate;
+	mp.paularate = old_mp.paularate;
+
+	mp.patterndata = old_mp.patterndata;
+	mp.ordertable = old_mp.ordertable;
+
+	memcpy(mp.samples, old_mp.samples, sizeof(mp.samples));
+
+	mp.maxtick = mp.speed = 6; mp.audiospeed = mp.samplerate / 50;
+
+	for(int i = 0; i < 4; i++) {
+		mp.paula[i].age = INT32_MAX;
+	}
+
+	switch(order) {
+		case -2:
+			if(neworder > 0) neworder--;
+			break;
+
+		case -1:
+			if(neworder < mp.orders - 1) neworder++;
+			break;
+
+		default:
+			if(order < 0) order = 0;
+			if(order >= mp.orders) order = neworder - 1;
+
+			neworder = order;
+			break;
+	}
+
+	int oldorder = 0;
+
+	while(mp.order < neworder) {
+		ProcessMOD();
+
+		if(oldorder > mp.order)
+			break;
+		else
+			oldorder = mp.order;
 	}
 
 	return &mp;

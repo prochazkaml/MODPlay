@@ -39,3 +39,4 @@ typedef struct {
 ModPlayerStatus_t *InitMOD(uint8_t *mod, int samplerate);
 ModPlayerStatus_t *RenderMOD(short *buf, int len);
 ModPlayerStatus_t *ProcessMOD();
+ModPlayerStatus_t *JumpMOD(int order); // -2 = decrement, -1 = increment, 0+ = absolute
