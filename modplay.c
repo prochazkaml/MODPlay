@@ -133,11 +133,13 @@ ModPlayerStatus_t *ProcessMOD() {
 					break;
 
 				case 0xF:
-					if(effval_tmp < 0x20) {
-						mp.maxtick = (mp.maxtick / mp.speed) * effval_tmp;
-						mp.speed = effval_tmp;
-					} else {
-						mp.audiospeed = mp.samplerate * 125 / effval_tmp / 50;
+					if(effval_tmp) {
+						if(effval_tmp < 0x20) {
+							mp.maxtick = (mp.maxtick / mp.speed) * effval_tmp;
+							mp.speed = effval_tmp;
+						} else {
+							mp.audiospeed = mp.samplerate * 125 / effval_tmp / 50;
+						}
 					}
 
 					break;
