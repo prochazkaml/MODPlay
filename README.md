@@ -29,10 +29,10 @@ The following list was taken from the [OpenMPT wiki](https://wiki.openmpt.org/Ma
 |`1xx`|Portamento Up|Pitch|✓|
 |`2xx`|Portamento Down|Pitch|✓|
 |`3xx`|Tone Portamento|Pitch|✓|
-|`4xy`|Vibrato|Pitch|-|
+|`4xy`|Vibrato|Pitch|✓|
 |`5xy`|Volume Slide + Tone Portamento|Volume + Pitch|✓|
-|`6xy`|Volume Slide + Vibrato|Volume + Pitch|Partial (only volume affected)|
-|`7xy`|Tremolo|Volume|-|
+|`6xy`|Volume Slide + Vibrato|Volume + Pitch|✓|
+|`7xy`|Tremolo|Volume|✓|
 |`8xx`|Set Panning|Panning|- (non-standard)|
 |`9xx`|Sample Offset|Other|✓|
 |`Axy`|Volume Slide|Volume|✓|
@@ -43,11 +43,11 @@ The following list was taken from the [OpenMPT wiki](https://wiki.openmpt.org/Ma
 |`E1x`|Fine Portamento Up|Pitch|✓|
 |`E2x`|Fine Portamento Down|Pitch|✓|
 |`E3x`|Glissando|Pitch|- (not widely supported anyway)|
-|`E4x`|Set Vibrato Waveform|Pitch|-|
+|`E4x`|Set Vibrato Waveform|Pitch|✓|
 |`E5x`|Set Finetune|Pitch|✓|
 |`E60`|Pattern Loop Start|Global|✓|
 |`E6x`|Pattern Loop|Global|✓|
-|`E7x`|Set Tremolo Waveform|Volume|-|
+|`E7x`|Set Tremolo Waveform|Volume|✓|
 |`E8x`|Set Panning|Panning|- (non-standard)|
 |`E9x`|Retrigger|Other|✓|
 |`EAx`|Fine Volume Slide Up|Volume|✓|

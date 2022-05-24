@@ -22,14 +22,24 @@ typedef struct {
 } Sample;
 
 typedef struct {
+	int val;
+	uint8_t waveform;
+	uint8_t phase;
+	uint8_t speed;
+	uint8_t depth;
+} Oscillator;
+
+typedef struct {
 	int orders, maxpattern, order, row, tick, maxtick, speed, arp,
 		skiporderrequest, skiporderdestrow,
 		patlooprow, patloopcycle,
-		samplerate, paularate, audiospeed, audiotick;
+		samplerate, paularate, audiospeed, audiotick, random;
 
 	int note[4], sample[4], eff[4], effval[4];
 	int slideamount[4], slidenote[4], sampleoffset[4];
 	
+	Oscillator vibrato[4], tremolo[4];
+
 	uint8_t *patterndata, *ordertable;
 	Sample samples[31];
 

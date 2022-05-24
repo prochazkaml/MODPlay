@@ -4,6 +4,39 @@
 
 ModPlayerStatus_t mp;
 
+void _RecalculateWaveform(Oscillator *oscillator) {
+	int result;
+
+	// The following generators _might_ have been inspired by micromod's code:
+	// https://github.com/martincameron/micromod/blob/master/micromod-c/micromod.c
+
+	switch(oscillator->waveform) {
+		case 0:
+			// Sine
+			result = sine_table[oscillator->phase & 0x1F];
+			if((oscillator->phase & 0x20) > 0) result *= (-1);
+			break;
+
+		case 1:
+			// Sawtooth
+			result = 255 - (((oscillator->phase + 0x20) & 0x3F) << 3);
+			break;
+
+		case 2:
+			// Square
+			result = 255 - ((oscillator->phase & 0x20) << 4);
+			break;
+
+		case 3:
+			// Random
+			result = (mp.random >> 20) - 255;
+			mp.random = (mp.random * 65 + 17) & 0x1FFFFFFF;
+			break;
+	}
+
+	oscillator->val = result * oscillator->depth;
+}
+
 ModPlayerStatus_t *ProcessMOD() {
 	int i;
 
@@ -11,6 +44,8 @@ ModPlayerStatus_t *ProcessMOD() {
 		mp.skiporderrequest = -1;
 
 		for(i = 0; i < 4; i++) {
+			mp.vibrato[i].val = mp.tremolo[i].val = 0;
+
 			uint8_t *cell = mp.patterndata + mp.ordertable[mp.order] * (64 * 16) + mp.row * 16 + i * 4;
 
 			int note_tmp = cell[0];
@@ -46,6 +81,9 @@ ModPlayerStatus_t *ProcessMOD() {
 				if(eff_tmp != 0x3 && eff_tmp != 0x5 && (eff_tmp != 0xE || (effval_tmp & 0xF0) != 0xD0)) {
 					mp.paula[i].age = mp.paula[i].currentptr = 0;
 					mp.paula[i].period = mp.note[i];
+
+					if(mp.vibrato[i].waveform < 4) mp.vibrato[i].phase = 0;
+					if(mp.tremolo[i].waveform < 4) mp.tremolo[i].phase = 0;
 				}
 			}
 
@@ -55,6 +93,22 @@ ModPlayerStatus_t *ProcessMOD() {
 
 				case 0x5:
 					mp.slidenote[i] = mp.note[i];
+					break;
+
+				case 0x4:
+					if(effval_tmp & 0xF0) mp.vibrato[i].speed = effval_tmp >> 4;
+					if(effval_tmp & 0x0F) mp.vibrato[i].depth = effval_tmp & 0x0F;
+
+					// break intentionally left out here
+	
+				case 0x6:
+					_RecalculateWaveform(&mp.vibrato[i]);
+					break;
+
+				case 0x7:
+					if(effval_tmp & 0xF0) mp.tremolo[i].speed = effval_tmp >> 4;
+					if(effval_tmp & 0x0F) mp.tremolo[i].depth = effval_tmp & 0x0F;
+					_RecalculateWaveform(&mp.tremolo[i]);
 					break;
 
 				case 0xC:
@@ -101,6 +155,10 @@ ModPlayerStatus_t *ProcessMOD() {
 							mp.paula[i].period += effval_tmp & 0xF;
 							break;
 						
+						case 0x4:
+							mp.vibrato[i].waveform = effval_tmp & 0x7;
+							break;
+
 						case 0x6:
 							if(effval_tmp & 0xF) {
 								if(!mp.patloopcycle)
@@ -115,6 +173,10 @@ ModPlayerStatus_t *ProcessMOD() {
 							} else {
 								mp.patlooprow = mp.row;
 							}
+
+						case 0x7:
+							mp.tremolo[i].waveform = effval_tmp & 0x7;
+							break;
 
 						case 0xA:
 							mp.paula[i].volume += effval_tmp & 0xF;
@@ -214,8 +276,17 @@ ModPlayerStatus_t *ProcessMOD() {
 
 				break;
 
+			case 0x4:
+				mp.vibrato[i].phase += mp.vibrato[i].speed;
+				_RecalculateWaveform(&mp.vibrato[i]);
+				break;
 
-			case 0xA: case 0x6:
+			case 0x6:
+				mp.vibrato[i].phase += mp.vibrato[i].speed;
+				_RecalculateWaveform(&mp.vibrato[i]);
+				// break intentionally left out here
+
+			case 0xA:
 				if(mp.tick) {
 					if(effval_tmp > 0xF) {
 						mp.paula[i].volume += (effval_tmp >> 4);
@@ -226,6 +297,11 @@ ModPlayerStatus_t *ProcessMOD() {
 					}
 				}
 
+				break;
+
+			case 0x7:
+				mp.tremolo[i].phase += mp.tremolo[i].speed;
+				_RecalculateWaveform(&mp.tremolo[i]);
 				break;
 
 			case 0xE:
@@ -306,13 +382,18 @@ ModPlayerStatus_t *RenderMOD(short *buf, int len) {
 
 						nextptr -= mp.paula[ch].looplength << 17;
 
-					int sample1 = mp.paula[ch].sample[mp.paula[ch].currentptr >> 16] * mp.paula[ch].volume;
-					int sample2 = mp.paula[ch].sample[nextptr >> 16] * mp.paula[ch].volume;
+					int vol = mp.paula[ch].volume + (mp.tremolo[ch].val >> 6);
+
+					if(vol < 0) vol = 0;
+					if(vol > 64) vol = 64;
+
+					int sample1 = mp.paula[ch].sample[mp.paula[ch].currentptr >> 16] * vol;
+					int sample2 = mp.paula[ch].sample[nextptr >> 16] * vol;
 
 					short sample = (sample1 * (0x10000 - (nextptr & 0xFFFF)) +
 						  sample2 * (nextptr & 0xFFFF)) / 0x10000;
 
-					// short sample = mp.paula[ch].sample[mp.paula[ch].currentptr >> 16] * mp.paula[ch].volume;
+					// short sample = mp.paula[ch].sample[mp.paula[ch].currentptr >> 16] * vol;
 
 					// Distribute the rendered sample across both output channels
 
@@ -328,7 +409,7 @@ ModPlayerStatus_t *RenderMOD(short *buf, int len) {
 				// Advance to the next required sample
 
 				if(mp.paula[ch].period)
-					mp.paula[ch].currentptr += (mp.paularate << 16) / ((uint32_t) mp.paula[ch].period);
+					mp.paula[ch].currentptr += (mp.paularate << 16) / (((uint32_t) mp.paula[ch].period) + (mp.vibrato[ch].val >> 7));
 
 				// Stop this channel if we have reached the end or loop it, if desired
 
