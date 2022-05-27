@@ -277,13 +277,17 @@ ModPlayerStatus_t *ProcessMOD() {
 				break;
 
 			case 0x4:
-				mp.vibrato[i].phase += mp.vibrato[i].speed;
-				_RecalculateWaveform(&mp.vibrato[i]);
+				if(mp.tick) {
+					mp.vibrato[i].phase += mp.vibrato[i].speed;
+					_RecalculateWaveform(&mp.vibrato[i]);
+				}
 				break;
 
 			case 0x6:
-				mp.vibrato[i].phase += mp.vibrato[i].speed;
-				_RecalculateWaveform(&mp.vibrato[i]);
+				if(mp.tick) {
+					mp.vibrato[i].phase += mp.vibrato[i].speed;
+					_RecalculateWaveform(&mp.vibrato[i]);
+				}
 				// break intentionally left out here
 
 			case 0xA:
@@ -300,8 +304,10 @@ ModPlayerStatus_t *ProcessMOD() {
 				break;
 
 			case 0x7:
-				mp.tremolo[i].phase += mp.tremolo[i].speed;
-				_RecalculateWaveform(&mp.tremolo[i]);
+				if(mp.tick) {
+					mp.tremolo[i].phase += mp.tremolo[i].speed;
+					_RecalculateWaveform(&mp.tremolo[i]);
+				}
 				break;
 
 			case 0xE:
@@ -562,7 +568,7 @@ ModPlayerStatus_t *JumpMOD(int order) {
 
 		default:
 			if(order < 0) order = 0;
-			if(order >= mp.orders) order = neworder - 1;
+			if(order >= mp.orders) order = mp.orders - 1;
 
 			neworder = order;
 			break;
