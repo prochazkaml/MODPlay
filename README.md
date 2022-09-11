@@ -1,10 +1,7 @@
 # MODPlay
 Yet another simple 4-channel MOD player library written in C. But I don't care, because this one's _mine_.
 
-<!--
-To hear for yourself how it sounds, you may visit [this website](https://mod.prochazka.ml/), which uses this exact library (compiled to WebAssembly with Emscripten).
-There are several examples available to pick from, but you may also upload your own files.
--->
+To hear for yourself how it sounds, you may visit [this website](https://mod.prochazka.ml/), which uses this exact library (compiled to WebAssembly with Emscripten), wrapped around a nice Windows 3.11-themed UI. There are several examples available to pick from, but you may also upload your own files.
 
 A simple example program is supplied with this library, which uses SDL for audio output. To compile it, run the following:
 
