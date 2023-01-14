@@ -2,6 +2,9 @@
 #include "tables.h"
 #include <string.h>
 
+// Comment out to turn off sample interpolation - will sound crunchy, but will run faster
+//#define USE_LINEAR_INTERPOLATION
+
 ModPlayerStatus_t mp;
 
 void _RecalculateWaveform(Oscillator *oscillator) {
@@ -378,9 +381,13 @@ ModPlayerStatus_t *RenderMOD(short *buf, int len) {
 
 		for(int ch = 0; ch < 4; ch++) {
 			if(mp.paula[ch].sample) {
-				// Perform linear interpolation on the sample (otherwise it will sound like crap)
-
 				if(!mp.paula[ch].muted) {
+					int vol = mp.paula[ch].volume + (mp.tremolo[ch].val >> 6);
+
+					if(vol < 0) vol = 0;
+					if(vol > 64) vol = 64;
+
+#ifdef USE_LINEAR_INTERPOLATION
 					uint32_t nextptr = mp.paula[ch].currentptr + 0x10000;
 					
 					if((nextptr >> 17) >= mp.paula[ch].length &&
@@ -388,18 +395,14 @@ ModPlayerStatus_t *RenderMOD(short *buf, int len) {
 
 						nextptr -= mp.paula[ch].looplength << 17;
 
-					int vol = mp.paula[ch].volume + (mp.tremolo[ch].val >> 6);
-
-					if(vol < 0) vol = 0;
-					if(vol > 64) vol = 64;
-
 					int sample1 = mp.paula[ch].sample[mp.paula[ch].currentptr >> 16] * vol;
 					int sample2 = mp.paula[ch].sample[nextptr >> 16] * vol;
 
 					short sample = (sample1 * (0x10000 - (nextptr & 0xFFFF)) +
 						  sample2 * (nextptr & 0xFFFF)) / 0x10000;
-
-					// short sample = mp.paula[ch].sample[mp.paula[ch].currentptr >> 16] * vol;
+#else
+					short sample = mp.paula[ch].sample[mp.paula[ch].currentptr >> 16] * vol;
+#endif
 
 					// Distribute the rendered sample across both output channels
 
