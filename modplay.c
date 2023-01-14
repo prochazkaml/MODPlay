@@ -3,7 +3,7 @@
 #include <string.h>
 
 // Comment out to turn off sample interpolation - will sound crunchy, but will run faster
-//#define USE_LINEAR_INTERPOLATION
+#define USE_LINEAR_INTERPOLATION
 
 ModPlayerStatus_t mp;
 
