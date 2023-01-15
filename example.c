@@ -52,12 +52,24 @@ int main(int argc, char *argv[]) {
 
 	printf("Playing %s...\n", argv[1]);
 
-	SDL_Init(SDL_INIT_AUDIO);
+	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
 	SDL_OpenAudio(&sdl_audio, 0);
 
 	SDL_PauseAudio(0);
 	
-	atexit(SDL_Quit);
+	SDL_Event event;
 
-	while(1) SDL_Delay(1000);
+	while(1) {
+		while(SDL_PollEvent(&event)) {
+			switch(event.type) {
+				case SDL_QUIT:
+					printf("\nQuitting.\n");
+					SDL_Quit();
+					exit(0);
+					break;
+			}
+		}
+
+		SDL_Delay(100);
+	}
 }
