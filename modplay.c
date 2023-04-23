@@ -143,7 +143,7 @@ ModPlayerStatus_t *ProcessMOD() {
 							mp.skiporderrequest = 0;
 					}
 
-					if(effval_tmp > 0x3F) effval_tmp = 0;
+					if(effval_tmp > 0x63) effval_tmp = 0;
 
 					mp.skiporderdestrow = (effval_tmp >> 4) * 10 + (effval_tmp & 0xF); // What were the ProTracker guys smoking?!
 					break;
