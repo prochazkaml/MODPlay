@@ -1,3 +1,5 @@
+#ifndef MODPLAY_H_INCLUDED
+#define MODPLAY_H_INCLUDED
 #include <stdint.h>
 
 typedef struct {
@@ -46,7 +48,92 @@ typedef struct {
 	PaulaChannel_t paula[4];
 } ModPlayerStatus_t;
 
+/*
+ * ModPlayerStatus_t *InitMOD(uint8_t *mod, int samplerate);
+ * 
+ * Initializes the MOD player with the given mod file and samplerate.
+ * 
+ * NOTE: As this function will write to the `*mod` array,
+ * it must be loaded in RAM (not memory-mapped ROM/Flash)
+ * and should be considered invalid after this function is run!
+ */
+
 ModPlayerStatus_t *InitMOD(uint8_t *mod, int samplerate);
+
+#ifndef USING_EXTERNAL_RENDERING
+
+/*
+ * ModPlayerStatus_t *RenderMOD(short *buf, int len);
+ * 
+ * Renders a buffer from the MOD given to InitMOD() to `*buf`.
+ * 
+ * NOTE: `len` specifies the number of samples, NOT BYTES.
+ * This MOD player renders in 16-bit stereo, so the `*buf` array
+ * is expected to have `len` * 4 allocated bytes of memory.
+ * 
+ * The samples are interleaved as follows:
+ * 
+ * Index | Value
+ * ------+------
+ * 0     | Sample 0, left channel
+ * 1     | Sample 0, right channel
+ * 2     | Sample 1, left channel
+ * 3     | Sample 1, right channel
+ * ...   | ...
+ * 
+ * This makes it compatible with many popular audio output
+ * libraries without any extra conversion (SDL, PortAudio etc).
+ */
+
 ModPlayerStatus_t *RenderMOD(short *buf, int len);
+
+#endif
+
+#ifdef USING_EXTERNAL_RENDERING
+
+/*
+ * ModPlayerStatus_t *ProcessMOD();
+ * 
+ * Advances to the next tick of the MOD file.
+ * 
+ * Handles the decoding of all pattern data (notes, samples, effects)
+ * and generates pitch/volume/sample offset commands for an external sampler
+ * (this info is accessible in the returned object->paula[0..3]).
+ * 
+ * NOTE: THIS FUNCTION IS CALLED INTERNALLY BY RenderMOD()!
+ * Please do not call this function if you are building a desktop
+ * application, use RenderMOD() instead, which will give you
+ * raw sample data that you can pass to your audio subsystem.
+ * 
+ * This function is only intended to be called by your application
+ * if you are not interested in MODPlay's sample renderer
+ * and want to create your own, or you want to use this library
+ * on system with actual hardware samplers (such as the Commodore Amiga
+ * or the Sony PlayStation).
+ */
+
 ModPlayerStatus_t *ProcessMOD();
-ModPlayerStatus_t *JumpMOD(int order); // -2 = decrement, -1 = increment, 0+ = absolute
+
+#endif
+
+/*
+ * ModPlayerStatus_t *JumpMOD(int order);
+ * 
+ * Jumps to a given order in the MOD file.
+ * 
+ * `order` is a number from 0 to numpatterns-1 in case you want
+ * to jump to a particular pattern.
+ * 
+ * If you are, for example, implementing a UI with back/forward skip,
+ * you can call this function with -2 to go back one pattern, or
+ * -1 to go forward one pattern.
+ * 
+ * If the desired pattern cannot be reached with regular playback
+ * (i.e. it is skipped over with Bxx in previous patterns),
+ * JumpMOD will be unable to reach it and will try to play
+ * pattern data after the skip.
+ */
+
+ModPlayerStatus_t *JumpMOD(int order);
+
+#endif
