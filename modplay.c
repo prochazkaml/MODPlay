@@ -399,7 +399,7 @@ ModPlayerStatus_t *RenderMOD(short *buf, int len) {
 					int sample2 = mp.paula[ch].sample[nextptr >> 16] * vol;
 
 					short sample = (sample1 * (0x10000 - (nextptr & 0xFFFF)) +
-						  sample2 * (nextptr & 0xFFFF)) / 0x10000;
+						  sample2 * (nextptr & 0xFFFF)) >> 16;
 #else
 					short sample = mp.paula[ch].sample[mp.paula[ch].currentptr >> 16] * vol;
 #endif
