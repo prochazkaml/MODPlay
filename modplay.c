@@ -77,7 +77,7 @@ ModPlayerStatus_t *ProcessMOD() {
 				else
 					finetune = mp.samples[mp.sample[i]].finetune;
 					
-				note_tmp = period_tables[finetune][note_tmp - 1];
+				note_tmp = period_tables[(int)finetune][note_tmp - 1];
 
 				mp.note[i] = note_tmp;
 
@@ -459,7 +459,7 @@ ModPlayerStatus_t *InitMOD(uint8_t *mod, int samplerate) {
 	}
 	mp.maxpattern++;
 
-	int8_t *samplemem = mod + 1084 + 1024 * mp.maxpattern;
+	int8_t *samplemem = (int8_t *)(mod) + 1084 + 1024 * mp.maxpattern;
 	mp.patterndata = mod + 1084;
 
 	for(int i = 0; i < 31; i++) {
