@@ -46,7 +46,7 @@ void SDL_Callback(void *data, uint8_t *stream, int len) {
 		}
 
 		if(bargraphvals[i] > bargraphtargets[i]) {
-			bargraphvals[i] -= 1.5;
+			bargraphvals[i] -= 2;
 
 			if(bargraphvals[i] < bargraphtargets[i]) bargraphvals[i] = bargraphtargets[i];
 		}
