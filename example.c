@@ -23,7 +23,7 @@ void SDL_Callback(void *data, uint8_t *stream, int len) {
 	for(int i = 0; i < 4; i++) {
 		printf("\n\r\e[2KCH %d |% 5d |% 3d |% 3d | ",
 			i + 1,
-			mp->paula[i].period,
+			mp->paula[i].period + (mp->vibrato[i].val >> 7),
 			mp->paula[i].volume,
 			mp->sample[i] + 1);
 
@@ -52,7 +52,7 @@ void SDL_Callback(void *data, uint8_t *stream, int len) {
 		}
 	}
 
-	printf("\e[6A\r\e[2KRow %02d, order %02d/%02d (pattern %02d) @ speed %d", mp->row, mp->order, mp->orders - 1, mp->ordertable[mp->order], mp->speed);
+	printf("\e[6A\r\e[2KRow %02d, order %02d/%02d (pattern %02d) @ speed %d", mp->row, mp->order + 1, mp->orders, mp->ordertable[mp->order], mp->speed);
 
 	fflush(stdout);
 }
