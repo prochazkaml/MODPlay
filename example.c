@@ -9,19 +9,19 @@
 #define SAMPLERATE 44100
 #define BARGRAPHSTEPS 48
 
-double bargraphvals[4] = { 0.0, 0.0, 0.0, 0.0 };
-double bargraphtargets[4] = { 0.0, 0.0, 0.0, 0.0 };
-double bargrapholdages[4] = { INFINITY, INFINITY, INFINITY, INFINITY };
+double bargraphvals[CHANNELS];
+double bargraphtargets[CHANNELS];
+double bargrapholdages[CHANNELS];
 
 void SDL_Callback(void *data, uint8_t *stream, int len) {
 	short *buf = (short *) stream;
 
 	ModPlayerStatus_t *mp = RenderMOD(buf, len / (sizeof(short) * 2));
 
-	printf("\n\nID   | FREQ | VL | SM | BARGRAPH");
+	printf("\n\nID    | FREQ | VL | SM | BARGRAPH");
 
-	for(int i = 0; i < 4; i++) {
-		printf("\n\r\e[2KCH %d |% 5d |% 3d |% 3d | ",
+	for(int i = 0; i < CHANNELS; i++) {
+		printf("\n\r\e[2KCH %02d |% 5d |% 3d |% 3d | ",
 			i + 1,
 			mp->paula[i].period + (mp->vibrato[i].val >> 7),
 			mp->paula[i].volume,
@@ -52,7 +52,7 @@ void SDL_Callback(void *data, uint8_t *stream, int len) {
 		}
 	}
 
-	printf("\e[6A\r\e[2KRow %02d, order %02d/%02d (pattern %02d) @ speed %d", mp->row, mp->order + 1, mp->orders, mp->ordertable[mp->order], mp->speed);
+	printf("\e[%dA\r\e[2KRow %02d, order %02d/%02d (pattern %02d) @ speed %d", 2 + CHANNELS, mp->row, mp->order + 1, mp->orders, mp->ordertable[mp->order], mp->speed);
 
 	fflush(stdout);
 }
@@ -91,6 +91,12 @@ int main(int argc, char *argv[]) {
 		exit(1);
 	}
 
+	for(int i = 0; i < CHANNELS; i++) {
+		bargraphvals[i] = 0.0;
+		bargraphtargets[i] = 0.0;
+		bargrapholdages[i] = INFINITY;
+	}
+
 	printf("Playing %s...\n\n", argv[1]);
 
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
@@ -104,7 +110,7 @@ int main(int argc, char *argv[]) {
 		while(SDL_PollEvent(&event)) {
 			switch(event.type) {
 				case SDL_QUIT:
-					printf("\r\e[2KQuitting.\n\n\n\n\n\n\n");
+					printf("\r\e[2KQuitting.\r\e[%dB\n\n", 2 + CHANNELS);
 					SDL_Quit();
 					exit(0);
 					break;

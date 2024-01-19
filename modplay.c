@@ -46,10 +46,10 @@ ModPlayerStatus_t *ProcessMOD() {
 	if(mp.tick == 0) {
 		mp.skiporderrequest = -1;
 
-		for(i = 0; i < 4; i++) {
+		for(i = 0; i < CHANNELS; i++) {
 			mp.vibrato[i].val = mp.tremolo[i].val = 0;
 
-			uint8_t *cell = mp.patterndata + mp.ordertable[mp.order] * (64 * 16) + mp.row * 16 + i * 4;
+			uint8_t *cell = mp.patterndata + 4 * (i + CHANNELS * (mp.row + 64 * mp.ordertable[mp.order]));
 
 			int note_tmp = cell[0];
 			int sample_tmp = cell[1];
@@ -215,7 +215,7 @@ ModPlayerStatus_t *ProcessMOD() {
 		}
 	}
 
-	for(i = 0; i < 4; i++) {
+	for(i = 0; i < CHANNELS; i++) {
 		int eff_tmp = mp.eff[i];
 		int effval_tmp = mp.effval[i];
 
@@ -379,7 +379,7 @@ ModPlayerStatus_t *RenderMOD(short *buf, int len) {
 
 		// Render the audio
 
-		for(int ch = 0; ch < 4; ch++) {
+		for(int ch = 0; ch < CHANNELS; ch++) {
 			if(mp.paula[ch].sample) {
 				if(!mp.paula[ch].muted) {
 					int vol = mp.paula[ch].volume + (mp.tremolo[ch].val >> 6);
@@ -459,7 +459,7 @@ ModPlayerStatus_t *InitMOD(uint8_t *mod, int samplerate) {
 	}
 	mp.maxpattern++;
 
-	int8_t *samplemem = (int8_t *)(mod) + 1084 + 1024 * mp.maxpattern;
+	int8_t *samplemem = (int8_t *)(mod) + 1084 + 64 * 4 * CHANNELS * mp.maxpattern;
 	mp.patterndata = mod + 1084;
 
 	for(int i = 0; i < 31; i++) {
@@ -491,8 +491,8 @@ ModPlayerStatus_t *InitMOD(uint8_t *mod, int samplerate) {
 
 	for(int pat = 0; pat < mp.maxpattern; pat++) {
 		for(int row = 0; row < 64; row++) {
-			for(int col = 0; col < 4; col++) {
-				uint8_t *cell = mp.patterndata + pat * (64 * 16) + row * 16 + col * 4;
+			for(int col = 0; col < CHANNELS; col++) {
+				uint8_t *cell = mp.patterndata + 4 * (col + CHANNELS * (row + 64 * pat));
 
 				int period = ((cell[0] & 0x0F) << 8) | cell[1];
 				int sample = (cell[0] & 0xF0) | ((cell[2] & 0xF0) >> 4);
@@ -530,7 +530,7 @@ ModPlayerStatus_t *InitMOD(uint8_t *mod, int samplerate) {
 
 	mp.maxtick = mp.speed = 6; mp.audiospeed = mp.samplerate / 50;
 
-	for(int i = 0; i < 4; i++) {
+	for(int i = 0; i < CHANNELS; i++) {
 		mp.paula[i].age = INT32_MAX;
 	}
 
@@ -556,7 +556,7 @@ ModPlayerStatus_t *JumpMOD(int order) {
 
 	mp.maxtick = mp.speed = 6; mp.audiospeed = mp.samplerate / 50;
 
-	for(int i = 0; i < 4; i++) {
+	for(int i = 0; i < CHANNELS; i++) {
 		mp.paula[i].age = INT32_MAX;
 	}
 

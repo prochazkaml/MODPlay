@@ -31,21 +31,23 @@ typedef struct {
 	uint8_t depth;
 } Oscillator;
 
+#define CHANNELS 4
+
 typedef struct {
 	int orders, maxpattern, order, row, tick, maxtick, speed, arp,
 		skiporderrequest, skiporderdestrow,
 		patlooprow, patloopcycle,
 		samplerate, paularate, audiospeed, audiotick, random;
 
-	int note[4], sample[4], eff[4], effval[4];
-	int slideamount[4], slidenote[4], sampleoffset[4];
+	int note[CHANNELS], sample[CHANNELS], eff[CHANNELS], effval[CHANNELS];
+	int slideamount[CHANNELS], slidenote[CHANNELS], sampleoffset[CHANNELS];
 	
-	Oscillator vibrato[4], tremolo[4];
+	Oscillator vibrato[CHANNELS], tremolo[CHANNELS];
 
 	uint8_t *patterndata, *ordertable;
 	Sample samples[31];
 
-	PaulaChannel_t paula[4];
+	PaulaChannel_t paula[CHANNELS];
 } ModPlayerStatus_t;
 
 /*
