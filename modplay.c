@@ -1,11 +1,31 @@
 #include "modplay.h"
-#include "tables.h"
 #include <string.h>
 
 // Comment out to turn off sample interpolation - will sound crunchy, but will run faster
 #define USE_LINEAR_INTERPOLATION
 
 ModPlayerStatus_t mp;
+
+const int finetune_table[16] = {
+	65536, 65065, 64596, 64132,
+	63670, 63212, 62757, 62306,
+	69433, 68933, 68438, 67945,
+	67456, 66971, 66489, 66011
+};
+
+const unsigned char sine_table[32] = {
+	0, 24, 49, 74, 97, 120, 141, 161,
+	180, 197, 212, 224, 235, 244, 250, 253,
+	255, 253, 250, 244, 235, 224, 212, 197,
+	180, 161, 141, 120, 97, 74, 49, 24
+};
+
+const int arpeggio_table[16] = {
+	65536, 61858, 58386, 55109,
+	52016, 49096, 46341, 43740,
+	41285, 38968, 36781, 34716,
+	32768, 30929, 29193, 27554
+};
 
 void _RecalculateWaveform(Oscillator_t *oscillator) {
 	int result;
