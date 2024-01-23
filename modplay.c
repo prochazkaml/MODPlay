@@ -360,7 +360,10 @@ ModPlayerStatus_t *ProcessMOD() {
 
 		// Pre-calculate sampler period & volume
 
-		mp.ch[i].samplegen.period = mp.ch[i].period + (mp.ch[i].vibrato.val >> 7);
+		if(mp.ch[i].period)
+			mp.ch[i].samplegen.period = mp.paularate / (mp.ch[i].period + (mp.ch[i].vibrato.val >> 7));
+		else
+			mp.ch[i].samplegen.period = 0;
 		
 		int vol = mp.ch[i].volume + (mp.ch[i].tremolo.val >> 6);
 
@@ -416,7 +419,7 @@ ModPlayerStatus_t *RenderMOD(short *buf, int len) {
 		int l = 0, r = 0;
 
 		for(int ch = 0; ch < mp.channels; ch++) {
-			if(mp.ch[ch].samplegen.sample) {
+			if(mp.ch[ch].samplegen.sample && (mp.ch[ch].samplegen.currentptr < mp.ch[ch].samplegen.length)) {
 				if(!mp.ch[ch].samplegen.muted) {
 					int vol = mp.ch[ch].samplegen.volume;
 
@@ -448,17 +451,13 @@ ModPlayerStatus_t *RenderMOD(short *buf, int len) {
 
 				// Advance to the next required sample
 
-				if(mp.ch[ch].samplegen.period)
-					mp.ch[ch].samplegen.currentptr += mp.paularate / mp.ch[ch].samplegen.period;
+				mp.ch[ch].samplegen.currentptr += mp.ch[ch].samplegen.period;
 
 				// Stop this channel if we have reached the end or loop it, if desired
 
-				if(mp.ch[ch].samplegen.currentptr >= mp.ch[ch].samplegen.length) {
-					if(mp.ch[ch].samplegen.looplength == 0) {
-						mp.ch[ch].samplegen.period = 0;
-					} else {
+				if((mp.ch[ch].samplegen.looplength != 0) && (mp.ch[ch].samplegen.currentptr >= mp.ch[ch].samplegen.length)) {
+					while(mp.ch[ch].samplegen.currentptr >= mp.ch[ch].samplegen.length)
 						mp.ch[ch].samplegen.currentptr -= mp.ch[ch].samplegen.looplength;
-					}
 				} else {
 					if(mp.ch[ch].samplegen.age < INT32_MAX)
 						mp.ch[ch].samplegen.age++;
