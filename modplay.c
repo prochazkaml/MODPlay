@@ -334,8 +334,8 @@ ModPlayerStatus_t *ProcessMOD() {
 				break;
 		}
 
-		if(mp.ch[i].samplegen.period < 113 && mp.ch[i].samplegen.period != 0) {
-			mp.ch[i].samplegen.period = 113;
+		if(mp.ch[i].samplegen.period < 0 && mp.ch[i].samplegen.period != 0) {
+			mp.ch[i].samplegen.period = 0;
 		}
 	}
 
