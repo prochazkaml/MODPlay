@@ -49,11 +49,11 @@ ModPlayerStatus_t *ProcessMOD() {
 		for(i = 0; i < CHANNELS; i++) {
 			mp.ch[i].vibrato.val = mp.ch[i].tremolo.val = 0;
 
-			uint8_t *cell = mp.patterndata + 4 * (i + CHANNELS * (mp.row + 64 * mp.ordertable[mp.order]));
+			const uint8_t *cell = mp.patterndata + 4 * (i + CHANNELS * (mp.row + 64 * mp.ordertable[mp.order]));
 
-			int note_tmp = cell[0];
-			int sample_tmp = cell[1];
-			int eff_tmp = cell[2];
+			int note_tmp = ((cell[0] << 8) | cell[1]) & 0xFFF;
+			int sample_tmp = (cell[0] & 0xF0) | (cell[2] >> 4);
+			int eff_tmp = cell[2] & 0x0F;
 			int effval_tmp = cell[3];
 
 			if(mp.ch[i].eff == 0 && mp.ch[i].effval != 0) {
@@ -76,8 +76,8 @@ ModPlayerStatus_t *ProcessMOD() {
 					finetune = effval_tmp & 0xF;
 				else
 					finetune = mp.samples[mp.ch[i].sample].finetune;
-					
-				note_tmp = period_tables[(int)finetune][note_tmp - 1];
+
+				note_tmp = note_tmp * finetune_table[finetune & 0xF] >> 16;
 
 				mp.ch[i].note = note_tmp;
 
@@ -334,8 +334,8 @@ ModPlayerStatus_t *ProcessMOD() {
 				break;
 		}
 
-		if(mp.ch[i].samplegen.period < period_tables[0][3*12-1] && mp.ch[i].samplegen.period != 0) {
-			mp.ch[i].samplegen.period = period_tables[0][3*12-1];
+		if(mp.ch[i].samplegen.period < 113 && mp.ch[i].samplegen.period != 0) {
+			mp.ch[i].samplegen.period = 113;
 		}
 	}
 
@@ -439,7 +439,7 @@ ModPlayerStatus_t *RenderMOD(short *buf, int len) {
 	return &mp;
 }
 
-ModPlayerStatus_t *InitMOD(uint8_t *mod, int samplerate) {
+ModPlayerStatus_t *InitMOD(const uint8_t *mod, int samplerate) {
 	if(memcmp(mod + 1080, "M.K.", 4)) {
 		return NULL;
 	}
@@ -459,11 +459,11 @@ ModPlayerStatus_t *InitMOD(uint8_t *mod, int samplerate) {
 	}
 	mp.maxpattern++;
 
-	int8_t *samplemem = (int8_t *)(mod) + 1084 + 64 * 4 * CHANNELS * mp.maxpattern;
+	const int8_t *samplemem = mod + 1084 + 64 * 4 * CHANNELS * mp.maxpattern;
 	mp.patterndata = mod + 1084;
 
 	for(int i = 0; i < 31; i++) {
-		uint8_t *sample = mod + 20 + i * 30;
+		const uint8_t *sample = mod + 20 + i * 30;
 
 		mp.samples[i].length = (sample[22] << 8) | sample[23];
 		mp.samples[i].finetune = sample[24];
@@ -486,45 +486,6 @@ ModPlayerStatus_t *InitMOD(uint8_t *mod, int samplerate) {
 			mp.samples[i].looplength = mp.samples[i].actuallength - mp.samples[i].looppoint;
 		} else {
 			mp.samples[i].looplength = mp.samples[i].actuallength - mp.samples[i].looppoint;
-		}
-	}
-
-	for(int pat = 0; pat < mp.maxpattern; pat++) {
-		for(int row = 0; row < 64; row++) {
-			for(int col = 0; col < CHANNELS; col++) {
-				uint8_t *cell = mp.patterndata + 4 * (col + CHANNELS * (row + 64 * pat));
-
-				int period = ((cell[0] & 0x0F) << 8) | cell[1];
-				int sample = (cell[0] & 0xF0) | ((cell[2] & 0xF0) >> 4);
-				int eff = cell[2] & 0x0F;
-				int effval = cell[3];
-
-				if(period == 0) {
-					cell[0] = 0;
-				} else {
-					int note = 0;
-
-					for(int i = 1; i < 36; i++) {
-						if(period_tables[0][i] <= period) {
-							int low = period - period_tables[0][i];
-							int high = period_tables[0][i - 1] - period;
-
-							if(low < high)
-								note = i;
-							else
-								note = i - 1;
-
-							break;
-						}
-					}
-
-					cell[0] = note + 1;
-				}
-
-				cell[1] = sample;
-				cell[2] = eff;
-				cell[3] = effval;
-			}
 		}
 	}
 

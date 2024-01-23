@@ -91,6 +91,8 @@ int main(int argc, char *argv[]) {
 		exit(1);
 	}
 
+	printf("Status type size: %d\n", sizeof(ModPlayerStatus_t));
+
 	for(int i = 0; i < CHANNELS; i++) {
 		bargraphvals[i] = 0.0;
 		bargraphtargets[i] = 0.0;

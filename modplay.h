@@ -32,8 +32,8 @@ typedef struct {
 } Oscillator_t;
 
 typedef struct {
-	int note, sample, eff, effval;
-	int slideamount, slidenote, sampleoffset;
+	int note, sample, eff, effval; // TODO - reduce these to a smaller type
+	int slideamount, slidenote, sampleoffset; // TODO - same here
 	Oscillator_t vibrato, tremolo;
 	PaulaChannel_t samplegen;
 } TrackerChannel_t;
@@ -48,21 +48,17 @@ typedef struct {
 
 	TrackerChannel_t ch[CHANNELS];
 
-	uint8_t *patterndata, *ordertable;
+	const uint8_t *patterndata, *ordertable;
 	Sample_t samples[31];
 } ModPlayerStatus_t;
 
 /*
- * ModPlayerStatus_t *InitMOD(uint8_t *mod, int samplerate);
+ * ModPlayerStatus_t *InitMOD(const uint8_t *mod, int samplerate);
  * 
  * Initializes the MOD player with the given mod file and samplerate.
- * 
- * NOTE: As this function will write to the `*mod` array,
- * it must be loaded in RAM (not memory-mapped ROM/Flash)
- * and should be considered invalid after this function is run!
  */
 
-ModPlayerStatus_t *InitMOD(uint8_t *mod, int samplerate);
+ModPlayerStatus_t *InitMOD(const uint8_t *mod, int samplerate);
 
 #ifndef USING_EXTERNAL_RENDERING
 
