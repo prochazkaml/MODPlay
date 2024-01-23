@@ -77,15 +77,15 @@ ModPlayerStatus_t *ProcessMOD() {
 			int effval_tmp = cell[3];
 
 			if(mp.ch[i].eff == 0 && mp.ch[i].effval != 0) {
-				mp.ch[i].samplegen.period = mp.ch[i].note;
+				mp.ch[i].period = mp.ch[i].note;
 			}
 
 			if(sample_tmp) {
 				mp.ch[i].sample = sample_tmp - 1;
 				
-				mp.ch[i].samplegen.length = mp.samples[sample_tmp - 1].actuallength;
-				mp.ch[i].samplegen.looplength = mp.samples[sample_tmp - 1].looplength;
-				mp.ch[i].samplegen.volume = mp.sampleheaders[sample_tmp - 1].volume;
+				mp.ch[i].samplegen.length = mp.samples[sample_tmp - 1].actuallength << 17;
+				mp.ch[i].samplegen.looplength = mp.samples[sample_tmp - 1].looplength << 17;
+				mp.ch[i].volume = mp.sampleheaders[sample_tmp - 1].volume;
 				mp.ch[i].samplegen.sample = mp.samples[sample_tmp - 1].data;
 			}
 
@@ -103,7 +103,7 @@ ModPlayerStatus_t *ProcessMOD() {
 
 				if(eff_tmp != 0x3 && eff_tmp != 0x5 && (eff_tmp != 0xE || (effval_tmp & 0xF0) != 0xD0)) {
 					mp.ch[i].samplegen.age = mp.ch[i].samplegen.currentptr = 0;
-					mp.ch[i].samplegen.period = mp.ch[i].note;
+					mp.ch[i].period = mp.ch[i].note;
 
 					if(mp.ch[i].vibrato.waveform < 4) mp.ch[i].vibrato.phase = 0;
 					if(mp.ch[i].tremolo.waveform < 4) mp.ch[i].tremolo.phase = 0;
@@ -135,7 +135,7 @@ ModPlayerStatus_t *ProcessMOD() {
 					break;
 
 				case 0xC:
-					mp.ch[i].samplegen.volume = (effval_tmp > 0x40) ? 0x40 : effval_tmp;
+					mp.ch[i].volume = (effval_tmp > 0x40) ? 0x40 : effval_tmp;
 					break;
 
 				case 0x9:
@@ -171,11 +171,11 @@ ModPlayerStatus_t *ProcessMOD() {
 				case 0xE:
 					switch(effval_tmp >> 4) {
 						case 0x1:
-							mp.ch[i].samplegen.period -= effval_tmp & 0xF;
+							mp.ch[i].period -= effval_tmp & 0xF;
 							break;
 
 						case 0x2:
-							mp.ch[i].samplegen.period += effval_tmp & 0xF;
+							mp.ch[i].period += effval_tmp & 0xF;
 							break;
 						
 						case 0x4:
@@ -202,13 +202,13 @@ ModPlayerStatus_t *ProcessMOD() {
 							break;
 
 						case 0xA:
-							mp.ch[i].samplegen.volume += effval_tmp & 0xF;
-							if(mp.ch[i].samplegen.volume > 0x40) mp.ch[i].samplegen.volume = 0x40;
+							mp.ch[i].volume += effval_tmp & 0xF;
+							if(mp.ch[i].volume > 0x40) mp.ch[i].volume = 0x40;
 							break;
 
 						case 0xB:
-							mp.ch[i].samplegen.volume -= effval_tmp & 0xF;
-							if(mp.ch[i].samplegen.volume < 0x00) mp.ch[i].samplegen.volume = 0x00;
+							mp.ch[i].volume -= effval_tmp & 0xF;
+							if(mp.ch[i].volume < 0x00) mp.ch[i].volume = 0x00;
 							break;
 
 						case 0xE:
@@ -255,25 +255,25 @@ ModPlayerStatus_t *ProcessMOD() {
 						break;
 				}
 
-				mp.ch[i].samplegen.period = mp.arp;
+				mp.ch[i].period = mp.arp;
 				break;
 
 			case 0x1:
-				if(mp.tick) mp.ch[i].samplegen.period -= effval_tmp;
+				if(mp.tick) mp.ch[i].period -= effval_tmp;
 				break;
 
 			case 0x2:
-				if(mp.tick) mp.ch[i].samplegen.period += effval_tmp;
+				if(mp.tick) mp.ch[i].period += effval_tmp;
 				break;
 
 			case 0x5:
 				if(mp.tick) {
 					if(effval_tmp > 0xF) {
-						mp.ch[i].samplegen.volume += (effval_tmp >> 4);
-						if(mp.ch[i].samplegen.volume > 0x40) mp.ch[i].samplegen.volume = 0x40;
+						mp.ch[i].volume += (effval_tmp >> 4);
+						if(mp.ch[i].volume > 0x40) mp.ch[i].volume = 0x40;
 					} else {
-						mp.ch[i].samplegen.volume -= (effval_tmp & 0xF);
-						if(mp.ch[i].samplegen.volume < 0x00) mp.ch[i].samplegen.volume = 0x00;
+						mp.ch[i].volume -= (effval_tmp & 0xF);
+						if(mp.ch[i].volume < 0x00) mp.ch[i].volume = 0x00;
 					}
 				}
 				
@@ -284,16 +284,16 @@ ModPlayerStatus_t *ProcessMOD() {
 				if(mp.tick) {
 					if(!effval_tmp) effval_tmp = mp.ch[i].slideamount;
 
-					if(mp.ch[i].slidenote > mp.ch[i].samplegen.period) {
-						mp.ch[i].samplegen.period += effval_tmp;
+					if(mp.ch[i].slidenote > mp.ch[i].period) {
+						mp.ch[i].period += effval_tmp;
 
-						if(mp.ch[i].slidenote < mp.ch[i].samplegen.period)
-							mp.ch[i].samplegen.period = mp.ch[i].slidenote;
-					} else if(mp.ch[i].slidenote < mp.ch[i].samplegen.period) {
-						mp.ch[i].samplegen.period -= effval_tmp;
+						if(mp.ch[i].slidenote < mp.ch[i].period)
+							mp.ch[i].period = mp.ch[i].slidenote;
+					} else if(mp.ch[i].slidenote < mp.ch[i].period) {
+						mp.ch[i].period -= effval_tmp;
 
-						if(mp.ch[i].slidenote > mp.ch[i].samplegen.period)
-							mp.ch[i].samplegen.period = mp.ch[i].slidenote;
+						if(mp.ch[i].slidenote > mp.ch[i].period)
+							mp.ch[i].period = mp.ch[i].slidenote;
 					} 
 				}
 
@@ -316,11 +316,11 @@ ModPlayerStatus_t *ProcessMOD() {
 			case 0xA:
 				if(mp.tick) {
 					if(effval_tmp > 0xF) {
-						mp.ch[i].samplegen.volume += (effval_tmp >> 4);
-						if(mp.ch[i].samplegen.volume > 0x40) mp.ch[i].samplegen.volume = 0x40;
+						mp.ch[i].volume += (effval_tmp >> 4);
+						if(mp.ch[i].volume > 0x40) mp.ch[i].volume = 0x40;
 					} else {
-						mp.ch[i].samplegen.volume -= (effval_tmp & 0xF);
-						if(mp.ch[i].samplegen.volume < 0x00) mp.ch[i].samplegen.volume = 0x00;
+						mp.ch[i].volume -= (effval_tmp & 0xF);
+						if(mp.ch[i].volume < 0x00) mp.ch[i].volume = 0x00;
 					}
 				}
 
@@ -340,13 +340,13 @@ ModPlayerStatus_t *ProcessMOD() {
 						break;
 
 					case 0xC:
-						if(mp.tick >= (effval_tmp & 0xF)) mp.ch[i].samplegen.volume = 0;
+						if(mp.tick >= (effval_tmp & 0xF)) mp.ch[i].volume = 0;
 						break;
 
 					case 0xD:
 						if(mp.tick == (effval_tmp & 0xF)) {
 							mp.ch[i].samplegen.age = mp.ch[i].samplegen.currentptr = 0;
-							mp.ch[i].samplegen.period = mp.ch[i].note;
+							mp.ch[i].period = mp.ch[i].note;
 						}
 						break;
 				}
@@ -354,9 +354,20 @@ ModPlayerStatus_t *ProcessMOD() {
 				break;
 		}
 
-		if(mp.ch[i].samplegen.period < 0 && mp.ch[i].samplegen.period != 0) {
-			mp.ch[i].samplegen.period = 0;
+		if(mp.ch[i].period < 0 && mp.ch[i].period != 0) {
+			mp.ch[i].period = 0;
 		}
+
+		// Pre-calculate sampler period & volume
+
+		mp.ch[i].samplegen.period = mp.ch[i].period + (mp.ch[i].vibrato.val >> 7);
+		
+		int vol = mp.ch[i].volume + (mp.ch[i].tremolo.val >> 6);
+
+		if(vol < 0) vol = 0;
+		if(vol > 64) vol = 64;
+
+		mp.ch[i].samplegen.volume = vol;
 	}
 
 	mp.tick++;
@@ -402,21 +413,18 @@ ModPlayerStatus_t *RenderMOD(short *buf, int len) {
 
 		// Render the audio
 
+		int l = 0, r = 0;
+
 		for(int ch = 0; ch < mp.channels; ch++) {
 			if(mp.ch[ch].samplegen.sample) {
 				if(!mp.ch[ch].samplegen.muted) {
-					int vol = mp.ch[ch].samplegen.volume + (mp.ch[ch].tremolo.val >> 6);
-
-					if(vol < 0) vol = 0;
-					if(vol > 64) vol = 64;
+					int vol = mp.ch[ch].samplegen.volume;
 
 #ifdef USE_LINEAR_INTERPOLATION
 					uint32_t nextptr = mp.ch[ch].samplegen.currentptr + 0x10000;
 					
-					if((nextptr >> 17) >= mp.ch[ch].samplegen.length &&
-						mp.ch[ch].samplegen.looplength != 0)
-
-						nextptr -= mp.ch[ch].samplegen.looplength << 17;
+					if(nextptr >= mp.ch[ch].samplegen.length && mp.ch[ch].samplegen.looplength != 0)
+						nextptr -= mp.ch[ch].samplegen.looplength;
 
 					int sample1 = mp.ch[ch].samplegen.sample[mp.ch[ch].samplegen.currentptr >> 16] * vol;
 					int sample2 = mp.ch[ch].samplegen.sample[nextptr >> 16] * vol;
@@ -430,33 +438,36 @@ ModPlayerStatus_t *RenderMOD(short *buf, int len) {
 					// Distribute the rendered sample across both output channels
 
 					if((ch & 3) == 1 || (ch & 3) == 2) {
-						buf[s * 2] += sample * minorchmul / 65536;
-						buf[s * 2 + 1] += sample * majorchmul / 65536;
+						l += sample * minorchmul;
+						r += sample * majorchmul;
 					} else {
-						buf[s * 2] += sample * majorchmul / 65536;
-						buf[s * 2 + 1] += sample * minorchmul / 65536;
+						l += sample * majorchmul;
+						r += sample * minorchmul;
 					}
 				}
 
 				// Advance to the next required sample
 
 				if(mp.ch[ch].samplegen.period)
-					mp.ch[ch].samplegen.currentptr += (mp.paularate << 16) / (((uint32_t) mp.ch[ch].samplegen.period) + (mp.ch[ch].vibrato.val >> 7));
+					mp.ch[ch].samplegen.currentptr += mp.paularate / mp.ch[ch].samplegen.period;
 
 				// Stop this channel if we have reached the end or loop it, if desired
 
-				if((mp.ch[ch].samplegen.currentptr >> 17) >= mp.ch[ch].samplegen.length) {
+				if(mp.ch[ch].samplegen.currentptr >= mp.ch[ch].samplegen.length) {
 					if(mp.ch[ch].samplegen.looplength == 0) {
 						mp.ch[ch].samplegen.period = 0;
 					} else {
-						mp.ch[ch].samplegen.currentptr -= mp.ch[ch].samplegen.looplength << 17;
+						mp.ch[ch].samplegen.currentptr -= mp.ch[ch].samplegen.looplength;
 					}
 				} else {
 					if(mp.ch[ch].samplegen.age < INT32_MAX)
-					mp.ch[ch].samplegen.age++;
+						mp.ch[ch].samplegen.age++;
 				}
 			}
 		}
+
+		buf[s * 2] = l / 65536;
+		buf[s * 2 + 1] = r / 65536;
 	}
 
 	return &mp;
@@ -500,7 +511,7 @@ ModPlayerStatus_t *InitMOD(const uint8_t *mod, int samplerate) {
 	mp.channels = channels;
 
 	mp.samplerate = samplerate;
-	mp.paularate = 3546895 / samplerate;
+	mp.paularate = (3546895 / samplerate) << 16;
 
 	mp.orders = mod[950];
 	mp.ordertable = mod + 952;
