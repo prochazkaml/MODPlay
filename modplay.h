@@ -15,9 +15,7 @@ typedef struct {
 
 typedef struct {
 	const int8_t *data;
-	uint16_t length;
 	uint16_t actuallength;
-	uint16_t looppoint;
 	uint16_t looplength;
 } Sample_t;
 
@@ -30,10 +28,15 @@ typedef struct {
 } Oscillator_t;
 
 typedef struct {
-	int note, sample, eff, effval; // TODO - reduce these to a smaller type
-	int slideamount, slidenote, sampleoffset; // TODO - same here
+	uint32_t note;
+	uint8_t sample, eff, effval;
+
+	uint8_t slideamount, sampleoffset;
+	short volume;
+	uint32_t slidenote;
+
 	uint32_t period;
-	int volume;
+
 	Oscillator_t vibrato, tremolo;
 	PaulaChannel_t samplegen;
 } TrackerChannel_t;

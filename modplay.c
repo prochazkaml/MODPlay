@@ -531,25 +531,25 @@ ModPlayerStatus_t *InitMOD(const uint8_t *mod, int samplerate) {
 	for(int i = 0; i < 31; i++) {
 		const SampleHeader_t *sample = mp.sampleheaders + i;
 
-		mp.samples[i].length = (sample->lengthhi << 8) | sample->lengthlo;
-		mp.samples[i].looppoint = (sample->looppointhi << 8) | sample->looppointlo;
+		uint16_t length = (sample->lengthhi << 8) | sample->lengthlo;
+		uint16_t looppoint = (sample->looppointhi << 8) | sample->looppointlo;
 		mp.samples[i].actuallength = (sample->looplengthhi << 8) | sample->looplengthlo;
 
 		mp.samples[i].data = samplemem;
-		samplemem += mp.samples[i].length * 2;
+		samplemem += length * 2;
 
-		mp.samples[i].actuallength += mp.samples[i].looppoint;
+		mp.samples[i].actuallength += looppoint;
 
 		if(mp.samples[i].actuallength < 0x2) {
-			mp.samples[i].actuallength = mp.samples[i].length;
-			mp.samples[i].looppoint = 0xFFFF;
+			mp.samples[i].actuallength = length;
+			looppoint = 0xFFFF;
 			mp.samples[i].looplength = 0;
-		} else if(mp.samples[i].actuallength > mp.samples[i].length) {
-			mp.samples[i].looppoint /= 2;
-			mp.samples[i].actuallength -= mp.samples[i].looppoint;
-			mp.samples[i].looplength = mp.samples[i].actuallength - mp.samples[i].looppoint;
+		} else if(mp.samples[i].actuallength > length) {
+			looppoint /= 2;
+			mp.samples[i].actuallength -= looppoint;
+			mp.samples[i].looplength = mp.samples[i].actuallength - looppoint;
 		} else {
-			mp.samples[i].looplength = mp.samples[i].actuallength - mp.samples[i].looppoint;
+			mp.samples[i].looplength = mp.samples[i].actuallength - looppoint;
 		}
 	}
 
