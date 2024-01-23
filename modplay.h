@@ -21,7 +21,7 @@ typedef struct {
 	uint16_t looplength;
 	uint8_t volume;
 	int8_t finetune;
-} Sample;
+} Sample_t;
 
 typedef struct {
 	int val;
@@ -29,7 +29,14 @@ typedef struct {
 	uint8_t phase;
 	uint8_t speed;
 	uint8_t depth;
-} Oscillator;
+} Oscillator_t;
+
+typedef struct {
+	int note, sample, eff, effval;
+	int slideamount, slidenote, sampleoffset;
+	Oscillator_t vibrato, tremolo;
+	PaulaChannel_t samplegen;
+} TrackerChannel_t;
 
 #define CHANNELS 4
 
@@ -39,15 +46,10 @@ typedef struct {
 		patlooprow, patloopcycle,
 		samplerate, paularate, audiospeed, audiotick, random;
 
-	int note[CHANNELS], sample[CHANNELS], eff[CHANNELS], effval[CHANNELS];
-	int slideamount[CHANNELS], slidenote[CHANNELS], sampleoffset[CHANNELS];
-	
-	Oscillator vibrato[CHANNELS], tremolo[CHANNELS];
+	TrackerChannel_t ch[CHANNELS];
 
 	uint8_t *patterndata, *ordertable;
-	Sample samples[31];
-
-	PaulaChannel_t paula[CHANNELS];
+	Sample_t samples[31];
 } ModPlayerStatus_t;
 
 /*

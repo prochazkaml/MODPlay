@@ -23,18 +23,18 @@ void SDL_Callback(void *data, uint8_t *stream, int len) {
 	for(int i = 0; i < CHANNELS; i++) {
 		printf("\n\r\e[2KCH %02d |% 5d |% 3d |% 3d | ",
 			i + 1,
-			mp->paula[i].period + (mp->vibrato[i].val >> 7),
-			mp->paula[i].volume,
-			mp->sample[i] + 1);
+			mp->ch[i].samplegen.period + (mp->ch[i].vibrato.val >> 7),
+			mp->ch[i].samplegen.volume,
+			mp->ch[i].sample + 1);
 
-		bargraphtargets[i] = mp->paula[i].volume;
+		bargraphtargets[i] = mp->ch[i].samplegen.volume;
 
-		if(mp->paula[i].age < bargrapholdages[i])
+		if(mp->ch[i].samplegen.age < bargrapholdages[i])
 			bargraphtargets[i] *= 1.5;
 
-		bargrapholdages[i] = mp->paula[i].age;
+		bargrapholdages[i] = mp->ch[i].samplegen.age;
 
-		if(mp->paula[i].period == 0) bargraphtargets[i] = 0.0;
+		if(mp->ch[i].samplegen.period == 0) bargraphtargets[i] = 0.0;
 
 		if(bargraphvals[i] < bargraphtargets[i]) bargraphvals[i] = bargraphtargets[i];
 
