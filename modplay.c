@@ -46,10 +46,10 @@ ModPlayerStatus_t *ProcessMOD() {
 	if(mp.tick == 0) {
 		mp.skiporderrequest = -1;
 
-		for(i = 0; i < CHANNELS; i++) {
+		for(i = 0; i < mp.channels; i++) {
 			mp.ch[i].vibrato.val = mp.ch[i].tremolo.val = 0;
 
-			const uint8_t *cell = mp.patterndata + 4 * (i + CHANNELS * (mp.row + 64 * mp.ordertable[mp.order]));
+			const uint8_t *cell = mp.patterndata + 4 * (i + mp.channels * (mp.row + 64 * mp.ordertable[mp.order]));
 
 			int note_tmp = ((cell[0] << 8) | cell[1]) & 0xFFF;
 			int sample_tmp = (cell[0] & 0xF0) | (cell[2] >> 4);
@@ -215,7 +215,7 @@ ModPlayerStatus_t *ProcessMOD() {
 		}
 	}
 
-	for(i = 0; i < CHANNELS; i++) {
+	for(i = 0; i < mp.channels; i++) {
 		int eff_tmp = mp.ch[i].eff;
 		int effval_tmp = mp.ch[i].effval;
 
@@ -367,6 +367,9 @@ ModPlayerStatus_t *ProcessMOD() {
 ModPlayerStatus_t *RenderMOD(short *buf, int len) {
 	memset(buf, 0, len * 4);
 
+	int majorchmul = 131072 / (mp.channels / 2);
+	int minorchmul = 131072 / 3 / (mp.channels / 2);
+
 	for(int s = 0; s < len; s++) {
 		// Process the tick, if necessary
 
@@ -379,7 +382,7 @@ ModPlayerStatus_t *RenderMOD(short *buf, int len) {
 
 		// Render the audio
 
-		for(int ch = 0; ch < CHANNELS; ch++) {
+		for(int ch = 0; ch < mp.channels; ch++) {
 			if(mp.ch[ch].samplegen.sample) {
 				if(!mp.ch[ch].samplegen.muted) {
 					int vol = mp.ch[ch].samplegen.volume + (mp.ch[ch].tremolo.val >> 6);
@@ -407,11 +410,11 @@ ModPlayerStatus_t *RenderMOD(short *buf, int len) {
 					// Distribute the rendered sample across both output channels
 
 					if((ch & 3) == 1 || (ch & 3) == 2) {
-						buf[s * 2] += sample / 3;
-						buf[s * 2 + 1] += sample;
+						buf[s * 2] += sample * minorchmul / 65536;
+						buf[s * 2 + 1] += sample * majorchmul / 65536;
 					} else {
-						buf[s * 2] += sample;
-						buf[s * 2 + 1] += sample / 3;
+						buf[s * 2] += sample * majorchmul / 65536;
+						buf[s * 2 + 1] += sample * minorchmul / 65536;
 					}
 				}
 
@@ -440,11 +443,41 @@ ModPlayerStatus_t *RenderMOD(short *buf, int len) {
 }
 
 ModPlayerStatus_t *InitMOD(const uint8_t *mod, int samplerate) {
-	if(memcmp(mod + 1080, "M.K.", 4)) {
+	uint32_t signature = mod[1083] | (mod[1082] << 8) | (mod[1081] << 16) | (mod[1080] << 24);
+
+	int channels = 0;
+
+	// M.K. and M!K! = 4 channels
+
+	if(signature == 0x4D2E4B2E || signature == 0x4D214B21) {
+		channels = 4;
+	}
+
+	// FLTx
+
+	if((signature & 0xFFFFFF00) == 0x464C5400) {
+		channels = (signature & 0xFF) - '0';
+	}
+
+	// xCHN
+
+	if((signature & 0x00FFFFFF) == 0x0043484E) {
+		channels = (signature >> 24) - '0';
+	}
+
+	// xxCH
+
+	if((signature & 0x0000FFFF) == 0x00004348) {
+		channels = ((signature >> 24) & 0xF) * 10 + ((signature >> 16) & 0xF);
+	}
+
+	if(channels == 0 || channels >= CHANNELS) {
 		return NULL;
 	}
 
 	memset(&mp, 0, sizeof(mp));
+
+	mp.channels = channels;
 
 	mp.samplerate = samplerate;
 	mp.paularate = 3546895 / samplerate;
@@ -459,7 +492,7 @@ ModPlayerStatus_t *InitMOD(const uint8_t *mod, int samplerate) {
 	}
 	mp.maxpattern++;
 
-	const int8_t *samplemem = mod + 1084 + 64 * 4 * CHANNELS * mp.maxpattern;
+	const int8_t *samplemem = mod + 1084 + 64 * 4 * mp.channels * mp.maxpattern;
 	mp.patterndata = mod + 1084;
 
 	for(int i = 0; i < 31; i++) {
@@ -491,7 +524,7 @@ ModPlayerStatus_t *InitMOD(const uint8_t *mod, int samplerate) {
 
 	mp.maxtick = mp.speed = 6; mp.audiospeed = mp.samplerate / 50;
 
-	for(int i = 0; i < CHANNELS; i++) {
+	for(int i = 0; i < mp.channels; i++) {
 		mp.ch[i].samplegen.age = INT32_MAX;
 	}
 
@@ -517,7 +550,7 @@ ModPlayerStatus_t *JumpMOD(int order) {
 
 	mp.maxtick = mp.speed = 6; mp.audiospeed = mp.samplerate / 50;
 
-	for(int i = 0; i < CHANNELS; i++) {
+	for(int i = 0; i < mp.channels; i++) {
 		mp.ch[i].samplegen.age = INT32_MAX;
 	}
 

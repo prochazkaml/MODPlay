@@ -38,10 +38,10 @@ typedef struct {
 	PaulaChannel_t samplegen;
 } TrackerChannel_t;
 
-#define CHANNELS 4
+#define CHANNELS 32
 
 typedef struct {
-	int orders, maxpattern, order, row, tick, maxtick, speed, arp,
+	int channels, orders, maxpattern, order, row, tick, maxtick, speed, arp,
 		skiporderrequest, skiporderdestrow,
 		patlooprow, patloopcycle,
 		samplerate, paularate, audiospeed, audiotick, random;

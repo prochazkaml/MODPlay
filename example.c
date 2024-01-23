@@ -13,6 +13,8 @@ double bargraphvals[CHANNELS];
 double bargraphtargets[CHANNELS];
 double bargrapholdages[CHANNELS];
 
+int channels;
+
 void SDL_Callback(void *data, uint8_t *stream, int len) {
 	short *buf = (short *) stream;
 
@@ -20,7 +22,7 @@ void SDL_Callback(void *data, uint8_t *stream, int len) {
 
 	printf("\n\nID    | FREQ | VL | SM | BARGRAPH");
 
-	for(int i = 0; i < CHANNELS; i++) {
+	for(int i = 0; i < channels; i++) {
 		printf("\n\r\e[2KCH %02d |% 5d |% 3d |% 3d | ",
 			i + 1,
 			mp->ch[i].samplegen.period + (mp->ch[i].vibrato.val >> 7),
@@ -52,7 +54,7 @@ void SDL_Callback(void *data, uint8_t *stream, int len) {
 		}
 	}
 
-	printf("\e[%dA\r\e[2KRow %02d, order %02d/%02d (pattern %02d) @ speed %d", 2 + CHANNELS, mp->row, mp->order + 1, mp->orders, mp->ordertable[mp->order], mp->speed);
+	printf("\e[%dA\r\e[2KRow %02d, order %02d/%02d (pattern %02d) @ speed %d", 2 + channels, mp->row, mp->order + 1, mp->orders, mp->ordertable[mp->order], mp->speed);
 
 	fflush(stdout);
 }
@@ -86,10 +88,14 @@ int main(int argc, char *argv[]) {
 	fread(tune, 1, tune_len, f);
 	fclose(f);
 
-	if(!InitMOD(tune, SAMPLERATE)) {
+	ModPlayerStatus_t *mp = InitMOD(tune, SAMPLERATE);
+
+	if(!mp) {
 		printf("Invalid file!\n");
 		exit(1);
 	}
+
+	channels = mp->channels;
 
 	printf("Status type size: %d\n", sizeof(ModPlayerStatus_t));
 
@@ -112,7 +118,7 @@ int main(int argc, char *argv[]) {
 		while(SDL_PollEvent(&event)) {
 			switch(event.type) {
 				case SDL_QUIT:
-					printf("\r\e[2KQuitting.\r\e[%dB\n\n", 2 + CHANNELS);
+					printf("\r\e[2KQuitting.\r\e[%dB\n\n", 2 + channels);
 					SDL_Quit();
 					exit(0);
 					break;
