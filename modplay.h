@@ -19,8 +19,6 @@ typedef struct {
 	uint16_t actuallength;
 	uint16_t looppoint;
 	uint16_t looplength;
-	uint8_t volume;
-	int8_t finetune;
 } Sample_t;
 
 typedef struct {
@@ -38,6 +36,18 @@ typedef struct {
 	PaulaChannel_t samplegen;
 } TrackerChannel_t;
 
+typedef struct /*__attribute__((packed))*/ {
+	char name[22];
+	uint8_t lengthhi;
+	uint8_t lengthlo;
+	uint8_t finetune;
+	uint8_t volume;
+	uint8_t looppointhi;
+	uint8_t looppointlo;
+	uint8_t looplengthhi;
+	uint8_t looplengthlo;
+} SampleHeader_t;
+
 #define CHANNELS 32
 
 typedef struct {
@@ -49,6 +59,7 @@ typedef struct {
 	TrackerChannel_t ch[CHANNELS];
 
 	const uint8_t *patterndata, *ordertable;
+	const SampleHeader_t *sampleheaders;
 	Sample_t samples[31];
 } ModPlayerStatus_t;
 

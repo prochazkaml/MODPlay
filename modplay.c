@@ -85,7 +85,7 @@ ModPlayerStatus_t *ProcessMOD() {
 				
 				mp.ch[i].samplegen.length = mp.samples[sample_tmp - 1].actuallength;
 				mp.ch[i].samplegen.looplength = mp.samples[sample_tmp - 1].looplength;
-				mp.ch[i].samplegen.volume = mp.samples[sample_tmp - 1].volume;
+				mp.ch[i].samplegen.volume = mp.sampleheaders[sample_tmp - 1].volume;
 				mp.ch[i].samplegen.sample = mp.samples[sample_tmp - 1].data;
 			}
 
@@ -95,7 +95,7 @@ ModPlayerStatus_t *ProcessMOD() {
 				if(eff_tmp == 0xE && (effval_tmp & 0xF0) == 0x50)
 					finetune = effval_tmp & 0xF;
 				else
-					finetune = mp.samples[mp.ch[i].sample].finetune;
+					finetune = mp.sampleheaders[mp.ch[i].sample].finetune;
 
 				note_tmp = note_tmp * finetune_table[finetune & 0xF] >> 16;
 
@@ -515,14 +515,14 @@ ModPlayerStatus_t *InitMOD(const uint8_t *mod, int samplerate) {
 	const int8_t *samplemem = mod + 1084 + 64 * 4 * mp.channels * mp.maxpattern;
 	mp.patterndata = mod + 1084;
 
-	for(int i = 0; i < 31; i++) {
-		const uint8_t *sample = mod + 20 + i * 30;
+	mp.sampleheaders = (SampleHeader_t *) (mod + 20);
 
-		mp.samples[i].length = (sample[22] << 8) | sample[23];
-		mp.samples[i].finetune = sample[24];
-		mp.samples[i].volume = sample[25];
-		mp.samples[i].looppoint = (sample[26] << 8) | sample[27];
-		mp.samples[i].actuallength = (sample[28] << 8) | sample[29];
+	for(int i = 0; i < 31; i++) {
+		const SampleHeader_t *sample = mp.sampleheaders + i;
+
+		mp.samples[i].length = (sample->lengthhi << 8) | sample->lengthlo;
+		mp.samples[i].looppoint = (sample->looppointhi << 8) | sample->looppointlo;
+		mp.samples[i].actuallength = (sample->looplengthhi << 8) | sample->looplengthlo;
 
 		mp.samples[i].data = samplemem;
 		samplemem += mp.samples[i].length * 2;
