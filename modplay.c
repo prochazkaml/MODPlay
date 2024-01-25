@@ -419,7 +419,17 @@ ModPlayerStatus_t *RenderMOD(short *buf, int len) {
 		int l = 0, r = 0;
 
 		for(int ch = 0; ch < mp.channels; ch++) {
-			if(mp.ch[ch].samplegen.sample && (mp.ch[ch].samplegen.currentptr < mp.ch[ch].samplegen.length)) {
+			if(mp.ch[ch].samplegen.sample) {
+				// If the single-shot sample has finished playing, skip this channel
+
+				if((mp.ch[ch].samplegen.looplength == 0) && (mp.ch[ch].samplegen.currentptr >= mp.ch[ch].samplegen.length))
+					continue;
+
+				// If it is a looping sample, wrap around to the loop point
+
+				while(mp.ch[ch].samplegen.currentptr >= mp.ch[ch].samplegen.length)
+					mp.ch[ch].samplegen.currentptr -= mp.ch[ch].samplegen.looplength;
+
 				if(!mp.ch[ch].samplegen.muted) {
 					int vol = mp.ch[ch].samplegen.volume;
 
@@ -453,15 +463,8 @@ ModPlayerStatus_t *RenderMOD(short *buf, int len) {
 
 				mp.ch[ch].samplegen.currentptr += mp.ch[ch].samplegen.period;
 
-				// Stop this channel if we have reached the end or loop it, if desired
-
-				if((mp.ch[ch].samplegen.looplength != 0) && (mp.ch[ch].samplegen.currentptr >= mp.ch[ch].samplegen.length)) {
-					while(mp.ch[ch].samplegen.currentptr >= mp.ch[ch].samplegen.length)
-						mp.ch[ch].samplegen.currentptr -= mp.ch[ch].samplegen.looplength;
-				} else {
-					if(mp.ch[ch].samplegen.age < INT32_MAX)
-						mp.ch[ch].samplegen.age++;
-				}
+				if(mp.ch[ch].samplegen.age < INT32_MAX)
+					mp.ch[ch].samplegen.age++;
 			}
 		}
 
@@ -572,6 +575,9 @@ ModPlayerStatus_t *JumpMOD(int order) {
 	mp.maxpattern = old_mp.maxpattern;
 	mp.samplerate = old_mp.samplerate;
 	mp.paularate = old_mp.paularate;
+
+	mp.channels = old_mp.channels;
+	mp.sampleheaders = old_mp.sampleheaders;
 
 	mp.patterndata = old_mp.patterndata;
 	mp.ordertable = old_mp.ordertable;
