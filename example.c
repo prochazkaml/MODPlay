@@ -8,6 +8,10 @@
 
 #include "modplay.h"
 
+#ifdef TEST
+#include <sys/time.h>
+#endif
+
 // thx, https://gist.github.com/ictlyh/b9be0b020ae3d044dc75ef0caac01fbb
 
 /* Program documentation. */
@@ -218,9 +222,13 @@ int main(int argc, char *argv[]) {
 		SDL_Delay(100);
 	}
 #else
+	struct timeval stop, start;
+
+	gettimeofday(&start, NULL);
+
 	printf("Testing %s...\n", filename);
 
-	int oldorder = -1;
+	int oldorder = -1, samples = 0;
 
 	short fakebuf[1024];
 
@@ -230,8 +238,13 @@ int main(int argc, char *argv[]) {
 			oldorder = mp->order;
 		}
 		RenderMOD(fakebuf, 512);
+		samples += 512;
 	}
 
-	printf("Test finished without problems.\n");
+	gettimeofday(&stop, NULL);
+
+	printf("Test finished without problems. Rendered %.3fs of audio in %.3fs.\n",
+		((double) samples) / ((double) SAMPLERATE),
+		(double) (stop.tv_usec - start.tv_usec) / 1000000.0 + (double) (stop.tv_sec - start.tv_sec));
 #endif
 }
