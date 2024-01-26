@@ -457,7 +457,7 @@ ModPlayerStatus_t *RenderMOD(short *buf, int len) {
 
 				if(!pch->muted) {
 #ifdef USE_LINEAR_INTERPOLATION
-					int32_t nextptr = pch->currentptr + 0x10000;
+					uint32_t nextptr = pch->currentptr + 0x10000;
 					
 					while(nextptr >= pch->length) {
 						if(pch->looplength != 0)
