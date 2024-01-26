@@ -415,35 +415,35 @@ ModPlayerStatus_t *RenderMOD(short *buf, int len) {
 		int32_t l = 0, r = 0;
 
 		for(int ch = 0; ch < mp.channels; ch++) {
-			if(mp.ch[ch].samplegen.sample) {
+			PaulaChannel_t *pch = &mp.ch[ch].samplegen;
+
+			if(pch->sample) {
 				// If the single-shot sample has finished playing, skip this channel
 
-				if((mp.ch[ch].samplegen.looplength == 0) && (mp.ch[ch].samplegen.currentptr >= mp.ch[ch].samplegen.length))
+				if((pch->looplength == 0) && (pch->currentptr >= pch->length))
 					continue;
 
 				// If it is a looping sample, wrap around to the loop point
 
-				while(mp.ch[ch].samplegen.currentptr >= mp.ch[ch].samplegen.length)
-					mp.ch[ch].samplegen.currentptr -= mp.ch[ch].samplegen.looplength;
+				while(pch->currentptr >= pch->length)
+					pch->currentptr -= pch->looplength;
 
 				// Render the current sample
 
-				if(!mp.ch[ch].samplegen.muted) {
-					int32_t vol = mp.ch[ch].samplegen.volume;
-
+				if(!pch->muted) {
 #ifdef USE_LINEAR_INTERPOLATION
-					int32_t nextptr = mp.ch[ch].samplegen.currentptr + 0x10000;
+					int32_t nextptr = pch->currentptr + 0x10000;
 					
-					while(nextptr >= mp.ch[ch].samplegen.length && mp.ch[ch].samplegen.looplength != 0)
-						nextptr -= mp.ch[ch].samplegen.looplength;
+					while(nextptr >= pch->length && pch->looplength != 0)
+						nextptr -= pch->looplength;
 
-					int32_t sample1 = mp.ch[ch].samplegen.sample[mp.ch[ch].samplegen.currentptr >> 16];
-					int32_t sample2 = mp.ch[ch].samplegen.sample[nextptr >> 16];
+					int32_t sample1 = pch->sample[pch->currentptr >> 16];
+					int32_t sample2 = pch->sample[nextptr >> 16];
 
 					int32_t sample = (sample1 * (0x10000 - (nextptr & 0xFFFF)) +
-						  sample2 * (nextptr & 0xFFFF)) * vol / 65536;
+						  sample2 * (nextptr & 0xFFFF)) * pch->volume / 65536;
 #else
-					int32_t sample = mp.ch[ch].samplegen.sample[mp.ch[ch].samplegen.currentptr >> 16] * vol;
+					int32_t sample = pch->sample[pch->currentptr >> 16] * pch->volume;
 #endif
 
 					// Distribute the rendered sample across both output channels
@@ -459,10 +459,10 @@ ModPlayerStatus_t *RenderMOD(short *buf, int len) {
 
 				// Advance to the next required sample
 
-				mp.ch[ch].samplegen.currentptr += mp.ch[ch].samplegen.period;
+				pch->currentptr += pch->period;
 
-				if(mp.ch[ch].samplegen.age < INT32_MAX)
-					mp.ch[ch].samplegen.age++;
+				if(pch->age < INT32_MAX)
+					pch->age++;
 			}
 		}
 
