@@ -6,21 +6,21 @@
 
 ModPlayerStatus_t mp;
 
-const int finetune_table[16] = {
+static const int32_t finetune_table[16] = {
 	65536, 65065, 64596, 64132,
 	63670, 63212, 62757, 62306,
 	69433, 68933, 68438, 67945,
 	67456, 66971, 66489, 66011
 };
 
-const unsigned char sine_table[32] = {
+static const uint8_t sine_table[32] = {
 	0, 24, 49, 74, 97, 120, 141, 161,
 	180, 197, 212, 224, 235, 244, 250, 253,
 	255, 253, 250, 244, 235, 224, 212, 197,
 	180, 161, 141, 120, 97, 74, 49, 24
 };
 
-const int arpeggio_table[16] = {
+static const int32_t arpeggio_table[16] = {
 	65536, 61858, 58386, 55109,
 	52016, 49096, 46341, 43740,
 	41285, 38968, 36781, 34716,
@@ -28,7 +28,7 @@ const int arpeggio_table[16] = {
 };
 
 void _RecalculateWaveform(Oscillator_t *oscillator) {
-	int result;
+	int32_t result;
 
 	// The following generators _might_ have been inspired by micromod's code:
 	// https://github.com/martincameron/micromod/blob/master/micromod-c/micromod.c
@@ -61,12 +61,10 @@ void _RecalculateWaveform(Oscillator_t *oscillator) {
 }
 
 ModPlayerStatus_t *ProcessMOD() {
-	int i;
-
 	if(mp.tick == 0) {
 		mp.skiporderrequest = -1;
 
-		for(i = 0; i < mp.channels; i++) {
+		for(int i = 0; i < mp.channels; i++) {
 			mp.ch[i].vibrato.val = mp.ch[i].tremolo.val = 0;
 
 			const uint8_t *cell = mp.patterndata + 4 * (i + mp.channels * (mp.row + 64 * mp.ordertable[mp.order]));
@@ -90,7 +88,7 @@ ModPlayerStatus_t *ProcessMOD() {
 			}
 
 			if(note_tmp) {
-				char finetune;
+				int finetune;
 
 				if(eff_tmp == 0xE && (effval_tmp & 0xF0) == 0x50)
 					finetune = effval_tmp & 0xF;
@@ -235,7 +233,7 @@ ModPlayerStatus_t *ProcessMOD() {
 		}
 	}
 
-	for(i = 0; i < mp.channels; i++) {
+	for(int i = 0; i < mp.channels; i++) {
 		int eff_tmp = mp.ch[i].eff;
 		int effval_tmp = mp.ch[i].effval;
 
@@ -243,19 +241,17 @@ ModPlayerStatus_t *ProcessMOD() {
 			case 0x0:
 				switch(mp.tick % 3) {
 					case 0:
-						mp.arp = mp.ch[i].note;
+						mp.ch[i].period = mp.ch[i].note;
 						break;
 
 					case 1:
-						mp.arp = (mp.ch[i].note * arpeggio_table[effval_tmp >> 4]) >> 16;
+						mp.ch[i].period = (mp.ch[i].note * arpeggio_table[effval_tmp >> 4]) >> 16;
 						break;
 
 					case 2:
-						mp.arp = (mp.ch[i].note * arpeggio_table[effval_tmp & 0xF]) >> 16;
+						mp.ch[i].period = (mp.ch[i].note * arpeggio_table[effval_tmp & 0xF]) >> 16;
 						break;
 				}
-
-				mp.ch[i].period = mp.arp;
 				break;
 
 			case 0x1:
@@ -365,7 +361,7 @@ ModPlayerStatus_t *ProcessMOD() {
 		else
 			mp.ch[i].samplegen.period = 0;
 		
-		int vol = mp.ch[i].volume + (mp.ch[i].tremolo.val >> 6);
+		int32_t vol = mp.ch[i].volume + (mp.ch[i].tremolo.val >> 6);
 
 		if(vol < 0) vol = 0;
 		if(vol > 64) vol = 64;
@@ -401,8 +397,8 @@ ModPlayerStatus_t *ProcessMOD() {
 ModPlayerStatus_t *RenderMOD(short *buf, int len) {
 	memset(buf, 0, len * 4);
 
-	int majorchmul = 131072 / (mp.channels / 2);
-	int minorchmul = 131072 / 3 / (mp.channels / 2);
+	int32_t majorchmul = 131072 / (mp.channels / 2);
+	int32_t minorchmul = 131072 / 3 / (mp.channels / 2);
 
 	for(int s = 0; s < len; s++) {
 		// Process the tick, if necessary
@@ -416,7 +412,7 @@ ModPlayerStatus_t *RenderMOD(short *buf, int len) {
 
 		// Render the audio
 
-		int l = 0, r = 0;
+		int32_t l = 0, r = 0;
 
 		for(int ch = 0; ch < mp.channels; ch++) {
 			if(mp.ch[ch].samplegen.sample) {
@@ -433,21 +429,21 @@ ModPlayerStatus_t *RenderMOD(short *buf, int len) {
 				// Render the current sample
 
 				if(!mp.ch[ch].samplegen.muted) {
-					int vol = mp.ch[ch].samplegen.volume;
+					int32_t vol = mp.ch[ch].samplegen.volume;
 
 #ifdef USE_LINEAR_INTERPOLATION
-					uint32_t nextptr = mp.ch[ch].samplegen.currentptr + 0x10000;
+					int32_t nextptr = mp.ch[ch].samplegen.currentptr + 0x10000;
 					
 					while(nextptr >= mp.ch[ch].samplegen.length && mp.ch[ch].samplegen.looplength != 0)
 						nextptr -= mp.ch[ch].samplegen.looplength;
 
-					int sample1 = mp.ch[ch].samplegen.sample[mp.ch[ch].samplegen.currentptr >> 16] * vol;
-					int sample2 = mp.ch[ch].samplegen.sample[nextptr >> 16] * vol;
+					int32_t sample1 = mp.ch[ch].samplegen.sample[mp.ch[ch].samplegen.currentptr >> 16];
+					int32_t sample2 = mp.ch[ch].samplegen.sample[nextptr >> 16];
 
-					short sample = (sample1 * (0x10000 - (nextptr & 0xFFFF)) +
-						  sample2 * (nextptr & 0xFFFF)) >> 16;
+					int32_t sample = (sample1 * (0x10000 - (nextptr & 0xFFFF)) +
+						  sample2 * (nextptr & 0xFFFF)) * vol / 65536;
 #else
-					short sample = mp.ch[ch].samplegen.sample[mp.ch[ch].samplegen.currentptr >> 16] * vol;
+					int32_t sample = mp.ch[ch].samplegen.sample[mp.ch[ch].samplegen.currentptr >> 16] * vol;
 #endif
 
 					// Distribute the rendered sample across both output channels
@@ -477,7 +473,7 @@ ModPlayerStatus_t *RenderMOD(short *buf, int len) {
 	return &mp;
 }
 
-ModPlayerStatus_t *InitMOD(const uint8_t *mod, int samplerate) {
+ModPlayerStatus_t *InitMOD(const uint8_t *mod, uint32_t samplerate) {
 	uint32_t signature = mod[1083] | (mod[1082] << 8) | (mod[1081] << 16) | (mod[1080] << 24);
 
 	int channels = 0;

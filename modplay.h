@@ -9,7 +9,7 @@ typedef struct {
 	uint32_t length;
 	uint32_t looplength;
 	uint32_t period;
-	int volume;
+	int32_t volume;
 	int8_t muted;
 } PaulaChannel_t;
 
@@ -20,7 +20,7 @@ typedef struct {
 } Sample_t;
 
 typedef struct {
-	int val;
+	int32_t val;
 	uint8_t waveform;
 	uint8_t phase;
 	uint8_t speed;
@@ -56,10 +56,11 @@ typedef struct /*__attribute__((packed))*/ {
 #define CHANNELS 32
 
 typedef struct {
-	int channels, orders, maxpattern, order, row, tick, maxtick, speed, arp,
+	int channels, orders, maxpattern, order, row, tick, maxtick, speed,
 		skiporderrequest, skiporderdestrow,
-		patlooprow, patloopcycle,
-		samplerate, paularate, audiospeed, audiotick, random;
+		patlooprow, patloopcycle;
+
+	uint32_t samplerate, paularate, audiospeed, audiotick, random;
 
 	TrackerChannel_t ch[CHANNELS];
 
@@ -69,12 +70,12 @@ typedef struct {
 } ModPlayerStatus_t;
 
 /*
- * ModPlayerStatus_t *InitMOD(const uint8_t *mod, int samplerate);
+ * ModPlayerStatus_t *InitMOD(const uint8_t *mod, uint32_t samplerate);
  * 
  * Initializes the MOD player with the given mod file and samplerate.
  */
 
-ModPlayerStatus_t *InitMOD(const uint8_t *mod, int samplerate);
+ModPlayerStatus_t *InitMOD(const uint8_t *mod, uint32_t samplerate);
 
 #ifndef USING_EXTERNAL_RENDERING
 
