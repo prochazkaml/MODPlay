@@ -10,6 +10,7 @@ typedef struct {
 	uint32_t looplength;
 	uint32_t period;
 	int32_t volume;
+	int32_t currentsubptr; // only lower 16 bits are used in generation
 	int8_t muted;
 } PaulaChannel_t;
 

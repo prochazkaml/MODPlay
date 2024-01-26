@@ -106,8 +106,8 @@ ModPlayerStatus_t *ProcessMOD() {
 
 				mp.ch[i].sample = sample_tmp - 1;
 				
-				mp.ch[i].samplegen.length = mp.samples[sample_tmp - 1].actuallength << 17;
-				mp.ch[i].samplegen.looplength = mp.samples[sample_tmp - 1].looplength << 17;
+				mp.ch[i].samplegen.length = mp.samples[sample_tmp - 1].actuallength << 1;
+				mp.ch[i].samplegen.looplength = mp.samples[sample_tmp - 1].looplength << 1;
 				mp.ch[i].volume = mp.sampleheaders[sample_tmp - 1].volume;
 				mp.ch[i].samplegen.sample = mp.samples[sample_tmp - 1].data;
 			}
@@ -163,10 +163,10 @@ ModPlayerStatus_t *ProcessMOD() {
 
 				case 0x9:
 					if(effval_tmp) {
-						mp.ch[i].samplegen.currentptr = effval_tmp << 24;
+						mp.ch[i].samplegen.currentptr = effval_tmp << 8;
 						mp.ch[i].sampleoffset = effval_tmp;
 					} else {
-						mp.ch[i].samplegen.currentptr = mp.ch[i].sampleoffset << 24;
+						mp.ch[i].samplegen.currentptr = mp.ch[i].sampleoffset << 8;
 					}
 
 					mp.ch[i].samplegen.age = 0;
@@ -357,7 +357,8 @@ ModPlayerStatus_t *ProcessMOD() {
 			case 0xE:
 				switch(effval_tmp >> 4) {
 					case 0x9:
-						if(mp.tick && !(mp.tick % (effval_tmp & 0xF))) mp.ch[i].samplegen.age = mp.ch[i].samplegen.currentptr = 0;
+						if(mp.tick && !(mp.tick % (effval_tmp & 0xF)))
+							mp.ch[i].samplegen.age = mp.ch[i].samplegen.currentptr = mp.ch[i].samplegen.currentsubptr = 0;
 						break;
 
 					case 0xC:
@@ -366,7 +367,7 @@ ModPlayerStatus_t *ProcessMOD() {
 
 					case 0xD:
 						if(mp.tick == (effval_tmp & 0xF)) {
-							mp.ch[i].samplegen.age = mp.ch[i].samplegen.currentptr = 0;
+							mp.ch[i].samplegen.age = mp.ch[i].samplegen.currentptr = mp.ch[i].samplegen.currentsubptr = 0;
 							mp.ch[i].period = mp.ch[i].note;
 						}
 						break;
@@ -457,7 +458,7 @@ ModPlayerStatus_t *RenderMOD(short *buf, int len) {
 
 				if(!pch->muted) {
 #ifdef USE_LINEAR_INTERPOLATION
-					int32_t nextptr = pch->currentptr + 0x10000;
+					uint32_t nextptr = pch->currentptr + 1;
 					
 					while(nextptr >= pch->length) {
 						if(pch->looplength != 0)
@@ -466,16 +467,18 @@ ModPlayerStatus_t *RenderMOD(short *buf, int len) {
 							nextptr = pch->currentptr;
 					}
 
-					assert((pch->currentptr >> 16) < pch->length, "channel: %d, test %u < %u", ch, pch->currentptr >> 16, pch->length);
-					assert((nextptr >> 16) < pch->length, "channel: %d, test %u < %u", ch, nextptr >> 16, pch->length);
+					assert(pch->currentptr < pch->length, "channel: %d, test %u < %u", ch, pch->currentptr, pch->length);
+					assert(nextptr < pch->length, "channel: %d, test %u < %u", ch, nextptr, pch->length);
 
-					int32_t sample1 = pch->sample[pch->currentptr >> 16];
-					int32_t sample2 = pch->sample[nextptr >> 16];
+					int32_t sample1 = pch->sample[pch->currentptr];
+					int32_t sample2 = pch->sample[nextptr];
 
-					int32_t sample = (sample1 * (0x10000 - (nextptr & 0xFFFF)) +
-						  sample2 * (nextptr & 0xFFFF)) * pch->volume / 65536;
+					assert(pch->currentsubptr < 0x10000, "channel: %d, test %u < 0x10000", ch, pch->currentsubptr);
+
+					int32_t sample = (sample1 * (0x10000 - pch->currentsubptr) +
+						sample2 * pch->currentsubptr) * pch->volume / 65536;
 #else
-					int32_t sample = pch->sample[pch->currentptr >> 16] * pch->volume;
+					int32_t sample = pch->sample[pch->currentptr] * pch->volume;
 #endif
 
 					// Distribute the rendered sample across both output channels
@@ -491,7 +494,12 @@ ModPlayerStatus_t *RenderMOD(short *buf, int len) {
 
 				// Advance to the next required sample
 
-				pch->currentptr += pch->period;
+				pch->currentsubptr += pch->period & 0xFFFF;
+
+				if(pch->currentsubptr >= 0x10000) {
+					pch->currentptr += pch->currentsubptr >> 16;
+					pch->currentsubptr &= 0xFFFF;
+				}
 
 				if(pch->age < INT32_MAX)
 					pch->age++;
