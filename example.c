@@ -13,7 +13,7 @@
 
 /* Program documentation. */
 #ifdef TEST
-static const char doc[] = "MODPlay example program ** IN TEST MODE, WITHOUT AUDIO OUTPUT **";
+static const char doc[] = "MODPlay example program ** COMPILED IN TEST MODE, MAY BE SLOWER **";
 #else
 static const char doc[] = "MODPlay example program";
 #endif
@@ -24,6 +24,8 @@ static const char args_doc[] = "MODFILE";
 /* The options we understand. */
 static struct argp_option options[] = {
 	{ "render", 'r', "filename.wav", 0, "render to a WAV file (disables playback)" },
+	{ "sample-rate", 'a', "HZ", 0, "sets the playback/render sample rate\n(in Hz, 44100 by default)" },
+	{ "buffer-size", 'b', "SAMPLES", 0, "forces a specific audio buffer size" },
 	{ "disable-ch-info", 'd', 0, 0,  "disable live channel info during playback\n(enabled by default)" },
 	{ "start-order", 'o', "ORDER_ID", 0, "start playback from specified order\n(1 by default)" },
 	{ "speed", 's', "SPEED", 0, "force a given speed (the tune may override this setting)" },
@@ -36,6 +38,8 @@ static char *render_filename = NULL;
 static int start_order = 1;
 static int start_speed = 0;
 static int start_tempo = 0;
+static int sample_rate = 44100;
+static int buffer_size = 0;
 static char *filename;
 
 /* Parse a single option. */
@@ -45,6 +49,14 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
 			render_filename = arg;
 			break;
 		
+		case 'a':
+			sample_rate = atoi(arg);
+			break;
+
+		case 'b':
+			buffer_size = atoi(arg);
+			break;
+
 		case 'd':
 			disable_ch_info = true;
 			break;
@@ -86,8 +98,6 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
 /* Our argp parser. */
 static struct argp argp = { options, parse_opt, args_doc, doc };
 
-#define SAMPLERATE 44100
-
 static int channels;
 
 #define BARGRAPHSTEPS 48
@@ -95,6 +105,8 @@ static int channels;
 static double bargraphvals[CHANNELS];
 static double bargraphtargets[CHANNELS];
 static double bargrapholdages[CHANNELS];
+
+static double callback_rate; // 2 for 44100 Hz, 4 for 22050 Hz, etc.
 
 void SDL_Callback(void *data, uint8_t *stream, int len) {
 	short *buf = (short *) stream;
@@ -130,7 +142,7 @@ void SDL_Callback(void *data, uint8_t *stream, int len) {
 			}
 
 			if(bargraphvals[i] > bargraphtargets[i]) {
-				bargraphvals[i] -= 2;
+				bargraphvals[i] -= callback_rate;
 
 				if(bargraphvals[i] < bargraphtargets[i]) bargraphvals[i] = bargraphtargets[i];
 			}
@@ -145,7 +157,7 @@ void SDL_Callback(void *data, uint8_t *stream, int len) {
 }
 
 SDL_AudioSpec sdl_audio = {
-	.freq = SAMPLERATE,
+	.freq = 0,
 	.format = AUDIO_S16,
 	.channels = 2,
 	.samples = 1024,
@@ -159,7 +171,23 @@ void play(ModPlayerStatus_t *mp) {
 		bargrapholdages[i] = INFINITY;
 	}
 
-	printf("Playing %s...\n\n", filename);
+	sdl_audio.freq = sample_rate;
+
+	if(buffer_size) {
+		sdl_audio.samples = buffer_size;
+	} else {
+		while(sample_rate / sdl_audio.samples > 60 && sdl_audio.samples < 4096) {
+			sdl_audio.samples *= 2;
+		}
+
+		while(sample_rate / sdl_audio.samples < 30 && sdl_audio.samples > 64) {
+			sdl_audio.samples /= 2;
+		}
+	}
+
+	callback_rate = 44100.f * 2.f / ((double) sample_rate) * ((double) sdl_audio.samples) / 1024.f;
+
+	printf("Playing %s (at %d Hz, %d samples per frame)...\n\n", filename, sdl_audio.freq, sdl_audio.samples);
 
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
 	SDL_OpenAudio(&sdl_audio, 0);
@@ -230,7 +258,7 @@ void render(ModPlayerStatus_t *mp) {
 
 	fseek(f, 24, SEEK_SET);
 
-	uint32_t tmp = SAMPLERATE;
+	uint32_t tmp = sample_rate;
 	fwrite(&tmp, 1, 4, f);
 
 	tmp *= 4;
@@ -254,9 +282,10 @@ void render(ModPlayerStatus_t *mp) {
 
 	gettimeofday(&stop, NULL);
 
-	printf("Rendered %.3fs of audio in %.3fs.\n",
-		((double) samples) / ((double) SAMPLERATE),
-		(double) (stop.tv_usec - start.tv_usec) / 1000000.0 + (double) (stop.tv_sec - start.tv_sec));
+	double rendered = ((double) samples) / ((double) sample_rate);
+	double elapsed = (double) (stop.tv_usec - start.tv_usec) / 1000000.0 + (double) (stop.tv_sec - start.tv_sec);
+
+	printf("Rendered %.3fs of audio in %.3fs (%.3fx as fast as real time).\n", rendered, elapsed, rendered / elapsed);
 }
 
 int main(int argc, char *argv[]) {
@@ -277,7 +306,7 @@ int main(int argc, char *argv[]) {
 	fread(tune, 1, tune_len, f);
 	fclose(f);
 
-	ModPlayerStatus_t *mp = InitMOD(tune, SAMPLERATE);
+	ModPlayerStatus_t *mp = InitMOD(tune, sample_rate);
 
 	if(!mp) {
 		printf("Invalid file!\n");
