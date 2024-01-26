@@ -20,11 +20,15 @@ static const char args_doc[] = "MODFILE";
 static struct argp_option options[] = {
 	{ "disable-ch-info", 'd', 0, 0,  "disable live channel info during playback\n(enabled by default)" },
 	{ "start-order", 'o', "ORDER_ID", 0, "start playback from specified order\n(1 by default)" },
+	{ "speed", 's', "SPEED", 0, "force a given speed (the tune may override this setting)" },
+	{ "tempo", 't', "TEMPO", 0, "force a given speed (the tune may override this setting)" },
 	{ 0 }
 };
 
 static bool disable_ch_info = false;
 static int start_order = 1;
+static int start_speed = 0;
+static int start_tempo = 0;
 static char *filename;
 
 /* Parse a single option. */
@@ -36,6 +40,14 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
 
 		case 'o':
 			start_order = atoi(arg);
+			break;
+
+		case 's':
+			start_speed = atoi(arg);
+			break;
+
+		case 't':
+			start_tempo = atoi(arg);
 			break;
 
 		case ARGP_KEY_ARG:
@@ -157,6 +169,14 @@ int main(int argc, char *argv[]) {
 
 	if(start_order > 1 && start_order <= mp->orders) {
 		JumpMOD(start_order - 1);
+	}
+
+	if(start_speed > 0) {
+		mp->speed = start_speed;
+	}
+
+	if(start_tempo > 0) {
+		mp->audiospeed = mp->samplerate * 125 / start_tempo / 50;
 	}
 
 //	printf("Status type size: %d\n", sizeof(ModPlayerStatus_t));
