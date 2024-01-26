@@ -434,8 +434,12 @@ ModPlayerStatus_t *RenderMOD(short *buf, int len) {
 #ifdef USE_LINEAR_INTERPOLATION
 					int32_t nextptr = pch->currentptr + 0x10000;
 					
-					while(nextptr >= pch->length && pch->looplength != 0)
-						nextptr -= pch->looplength;
+					while(nextptr >= pch->length) {
+						if(pch->looplength != 0)
+							nextptr -= pch->looplength;
+						else
+							nextptr = pch->currentptr;
+					}
 
 					int32_t sample1 = pch->sample[pch->currentptr >> 16];
 					int32_t sample2 = pch->sample[nextptr >> 16];
