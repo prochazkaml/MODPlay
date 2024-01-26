@@ -5,12 +5,9 @@
 #include <string.h>
 #include <stdbool.h>
 #include <SDL/SDL.h>
+#include <sys/time.h>
 
 #include "modplay.h"
-
-#ifdef TEST
-#include <sys/time.h>
-#endif
 
 // thx, https://gist.github.com/ictlyh/b9be0b020ae3d044dc75ef0caac01fbb
 
@@ -26,14 +23,16 @@ static const char args_doc[] = "MODFILE";
 
 /* The options we understand. */
 static struct argp_option options[] = {
+	{ "render", 'r', "filename.wav", 0, "render to a WAV file (disables playback)" },
 	{ "disable-ch-info", 'd', 0, 0,  "disable live channel info during playback\n(enabled by default)" },
 	{ "start-order", 'o', "ORDER_ID", 0, "start playback from specified order\n(1 by default)" },
 	{ "speed", 's', "SPEED", 0, "force a given speed (the tune may override this setting)" },
-	{ "tempo", 't', "TEMPO", 0, "force a given speed (the tune may override this setting)" },
+	{ "tempo", 't', "TEMPO", 0, "force a given tempo (the tune may override this setting)" },
 	{ 0 }
 };
 
 static bool disable_ch_info = false;
+static char *render_filename = NULL;
 static int start_order = 1;
 static int start_speed = 0;
 static int start_tempo = 0;
@@ -42,6 +41,10 @@ static char *filename;
 /* Parse a single option. */
 static error_t parse_opt (int key, char *arg, struct argp_state *state) {
 	switch(key) {
+		case 'r':
+			render_filename = arg;
+			break;
+		
 		case 'd':
 			disable_ch_info = true;
 			break;
@@ -87,7 +90,6 @@ static struct argp argp = { options, parse_opt, args_doc, doc };
 
 static int channels;
 
-#ifndef TEST
 #define BARGRAPHSTEPS 48
 
 static double bargraphvals[CHANNELS];
@@ -149,7 +151,113 @@ SDL_AudioSpec sdl_audio = {
 	.samples = 1024,
 	.callback = SDL_Callback
 };
-#endif
+
+void play(ModPlayerStatus_t *mp) {
+	for(int i = 0; i < CHANNELS; i++) {
+		bargraphvals[i] = 0.0;
+		bargraphtargets[i] = 0.0;
+		bargrapholdages[i] = INFINITY;
+	}
+
+	printf("Playing %s...\n\n", filename);
+
+	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
+	SDL_OpenAudio(&sdl_audio, 0);
+
+	SDL_PauseAudio(0);
+	
+	SDL_Event event;
+
+	while(1) {
+		while(SDL_PollEvent(&event)) {
+			switch(event.type) {
+				case SDL_QUIT:
+					printf("\r\e[2KQuitting.\r\e[%dB\n\n", 2 + channels);
+					SDL_Quit();
+					exit(0);
+					break;
+			}
+		}
+
+		SDL_Delay(100);
+	}
+}
+
+void render(ModPlayerStatus_t *mp) {
+	// Yes, this will only work on a little endian machine. Too bad.
+
+	printf("Rendering %s...\n", filename);
+
+	int oldorder = -1, samples = 0;
+
+	uint8_t outbuf[512] = "RIFFabcdWAVE"
+		"fmt " // Format header
+		"\x10\x00\x00\x00" // Format header size (16 bytes)
+		"\x01\x00" // Type = PCM
+		"\x02\x00" // 2 channels
+		"efgh" // Sample rate (will fill this in later)
+		"ijkl" // Byte rate (will fill this in later)
+		"\x04\x00" // 4 bytes per sample
+		"\x10\x00" // 16 bits per sample
+		"data" // Data header
+		"mnop"; // Data size (will fill this in later)
+
+	struct timeval stop, start;
+
+	gettimeofday(&start, NULL);
+
+	FILE *f = fopen(render_filename, "wb");
+
+	if(f == NULL) {
+		printf("Error opening file for writing!\n");
+		exit(1);
+	}
+
+	fwrite(outbuf, 1, 44, f);
+
+	while(oldorder <= mp->order) {
+		if(oldorder != mp->order) {
+			printf("-> order %d/%d\n", mp->order + 1, mp->orders);
+			oldorder = mp->order;
+		}
+
+		RenderMOD((short *) outbuf, 128); // TODO - use audiospeed for this
+		fwrite(outbuf, 1, sizeof(outbuf), f);
+		samples += 128;
+	}
+
+	// Fill in the sample rate & byte rate
+
+	fseek(f, 24, SEEK_SET);
+
+	uint32_t tmp = SAMPLERATE;
+	fwrite(&tmp, 1, 4, f);
+
+	tmp *= 4;
+	fwrite(&tmp, 1, 4, f);
+
+	// Fill in the data size
+
+	tmp = samples * 4;
+
+	fseek(f, 40, SEEK_SET);
+	fwrite(&tmp, 1, 4, f);
+
+	// Fill in the file size
+
+	tmp += 36;
+
+	fseek(f, 4, SEEK_SET);
+	fwrite(&tmp, 1, 4, f);
+
+	fclose(f);
+
+	gettimeofday(&stop, NULL);
+
+	printf("Rendered %.3fs of audio in %.3fs.\n",
+		((double) samples) / ((double) SAMPLERATE),
+		(double) (stop.tv_usec - start.tv_usec) / 1000000.0 + (double) (stop.tv_sec - start.tv_sec));
+}
 
 int main(int argc, char *argv[]) {
 	argp_parse(&argp, argc, argv, 0, 0, NULL);
@@ -192,59 +300,9 @@ int main(int argc, char *argv[]) {
 
 //	printf("Status type size: %d\n", sizeof(ModPlayerStatus_t));
 
-#ifndef TEST
-	for(int i = 0; i < CHANNELS; i++) {
-		bargraphvals[i] = 0.0;
-		bargraphtargets[i] = 0.0;
-		bargrapholdages[i] = INFINITY;
+	if(render_filename == NULL) {
+		play(mp);
+	} else {
+		render(mp);
 	}
-
-	printf("Playing %s...\n\n", filename);
-
-	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
-	SDL_OpenAudio(&sdl_audio, 0);
-
-	SDL_PauseAudio(0);
-	
-	SDL_Event event;
-
-	while(1) {
-		while(SDL_PollEvent(&event)) {
-			switch(event.type) {
-				case SDL_QUIT:
-					printf("\r\e[2KQuitting.\r\e[%dB\n\n", 2 + channels);
-					SDL_Quit();
-					exit(0);
-					break;
-			}
-		}
-
-		SDL_Delay(100);
-	}
-#else
-	struct timeval stop, start;
-
-	gettimeofday(&start, NULL);
-
-	printf("Testing %s...\n", filename);
-
-	int oldorder = -1, samples = 0;
-
-	short fakebuf[1024];
-
-	while(oldorder <= mp->order) {
-		if(oldorder != mp->order) {
-			printf("-> order %d/%d\n", mp->order + 1, mp->orders);
-			oldorder = mp->order;
-		}
-		RenderMOD(fakebuf, 512);
-		samples += 512;
-	}
-
-	gettimeofday(&stop, NULL);
-
-	printf("Test finished without problems. Rendered %.3fs of audio in %.3fs.\n",
-		((double) samples) / ((double) SAMPLERATE),
-		(double) (stop.tv_usec - start.tv_usec) / 1000000.0 + (double) (stop.tv_sec - start.tv_sec));
-#endif
 }
