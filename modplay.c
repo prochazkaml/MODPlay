@@ -15,7 +15,7 @@ char testbuffer[512];
 void _assert(int cond, const char *condstr, const ModPlayerStatus_t *mp, int line) {
 	if(!cond) {
 		fprintf(stderr, "TEST FAILED ON LINE %d: %s\n", line, condstr);
-		fprintf(stderr, "order: %d, row: %d, tick: %d\n", mp->order, mp->row, mp->tick);
+		fprintf(stderr, "order: %d, row: %d, tick: %d\n", mp->order + 1, mp->row, mp->tick);
 		fprintf(stderr, "%s\n", testbuffer);
 		exit(1);
 	}

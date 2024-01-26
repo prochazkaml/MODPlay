@@ -222,11 +222,14 @@ int main(int argc, char *argv[]) {
 
 	int oldorder = -1;
 
-	short fakebuf[512];
+	short fakebuf[1024];
 
 	while(oldorder <= mp->order) {
-		oldorder = mp->order;
-		RenderMOD(fakebuf, 256);
+		if(oldorder != mp->order) {
+			printf("-> order %d/%d\n", mp->order + 1, mp->orders);
+			oldorder = mp->order;
+		}
+		RenderMOD(fakebuf, 512);
 	}
 
 	printf("Test finished without problems.\n");
