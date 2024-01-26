@@ -7,10 +7,10 @@
 
 char testbuffer[512];
 
-#define assert(cond, ...) do { \
+#define assert(cond, ...) if(!(cond)) { \
 		snprintf(testbuffer, 512, __VA_ARGS__); \
 		_assert(cond, #cond, &mp, __LINE__); \
-	} while(0)
+	}
 
 void _assert(int cond, const char *condstr, const ModPlayerStatus_t *mp, int line) {
 	if(!cond) {
