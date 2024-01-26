@@ -1,6 +1,29 @@
 #include "modplay.h"
 #include <string.h>
 
+#ifdef TEST
+#include <stdio.h>
+#include <stdlib.h>
+
+char testbuffer[512];
+
+#define assert(cond, ...) do { \
+		snprintf(testbuffer, 512, __VA_ARGS__); \
+		_assert(cond, #cond, &mp, __LINE__); \
+	} while(0)
+
+void _assert(int cond, const char *condstr, const ModPlayerStatus_t *mp, int line) {
+	if(!cond) {
+		fprintf(stderr, "TEST FAILED ON LINE %d: %s\n", line, condstr);
+		fprintf(stderr, "order: %d, row: %d, tick: %d\n", mp->order, mp->row, mp->tick);
+		fprintf(stderr, "%s\n", testbuffer);
+		exit(1);
+	}
+}
+#else
+#define assert(cond, ...)
+#endif
+
 // Comment out to turn off sample interpolation - will sound crunchy, but will run faster
 #define USE_LINEAR_INTERPOLATION
 
@@ -79,6 +102,8 @@ ModPlayerStatus_t *ProcessMOD() {
 			}
 
 			if(sample_tmp) {
+				if(sample_tmp > 31) sample_tmp = 1;
+
 				mp.ch[i].sample = sample_tmp - 1;
 				
 				mp.ch[i].samplegen.length = mp.samples[sample_tmp - 1].actuallength << 17;
@@ -440,6 +465,9 @@ ModPlayerStatus_t *RenderMOD(short *buf, int len) {
 						else
 							nextptr = pch->currentptr;
 					}
+
+					assert((pch->currentptr >> 16) < pch->length, "channel: %d, test %u < %u", ch, pch->currentptr >> 16, pch->length);
+					assert((nextptr >> 16) < pch->length, "channel: %d, test %u < %u", ch, nextptr >> 16, pch->length);
 
 					int32_t sample1 = pch->sample[pch->currentptr >> 16];
 					int32_t sample2 = pch->sample[nextptr >> 16];

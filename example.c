@@ -11,7 +11,11 @@
 // thx, https://gist.github.com/ictlyh/b9be0b020ae3d044dc75ef0caac01fbb
 
 /* Program documentation. */
+#ifdef TEST
+static const char doc[] = "MODPlay example program ** IN TEST MODE, WITHOUT AUDIO OUTPUT **";
+#else
 static const char doc[] = "MODPlay example program";
+#endif
 
 /* A description of the arguments we accept. */
 static const char args_doc[] = "MODFILE";
@@ -76,13 +80,15 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
 static struct argp argp = { options, parse_opt, args_doc, doc };
 
 #define SAMPLERATE 44100
+
+static int channels;
+
+#ifndef TEST
 #define BARGRAPHSTEPS 48
 
 static double bargraphvals[CHANNELS];
 static double bargraphtargets[CHANNELS];
 static double bargrapholdages[CHANNELS];
-
-static int channels;
 
 void SDL_Callback(void *data, uint8_t *stream, int len) {
 	short *buf = (short *) stream;
@@ -139,6 +145,7 @@ SDL_AudioSpec sdl_audio = {
 	.samples = 1024,
 	.callback = SDL_Callback
 };
+#endif
 
 int main(int argc, char *argv[]) {
 	argp_parse(&argp, argc, argv, 0, 0, NULL);
@@ -181,6 +188,7 @@ int main(int argc, char *argv[]) {
 
 //	printf("Status type size: %d\n", sizeof(ModPlayerStatus_t));
 
+#ifndef TEST
 	for(int i = 0; i < CHANNELS; i++) {
 		bargraphvals[i] = 0.0;
 		bargraphtargets[i] = 0.0;
@@ -209,4 +217,18 @@ int main(int argc, char *argv[]) {
 
 		SDL_Delay(100);
 	}
+#else
+	printf("Testing %s...\n", filename);
+
+	int oldorder = -1;
+
+	short fakebuf[512];
+
+	while(oldorder <= mp->order) {
+		oldorder = mp->order;
+		RenderMOD(fakebuf, 256);
+	}
+
+	printf("Test finished without problems.\n");
+#endif
 }
