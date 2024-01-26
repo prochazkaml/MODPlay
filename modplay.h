@@ -33,9 +33,9 @@ typedef struct {
 
 	uint8_t slideamount, sampleoffset;
 	short volume;
-	uint32_t slidenote;
+	int32_t slidenote;
 
-	uint32_t period;
+	int32_t period;
 
 	Oscillator_t vibrato, tremolo;
 	PaulaChannel_t samplegen;

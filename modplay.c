@@ -430,13 +430,15 @@ ModPlayerStatus_t *RenderMOD(short *buf, int len) {
 				while(mp.ch[ch].samplegen.currentptr >= mp.ch[ch].samplegen.length)
 					mp.ch[ch].samplegen.currentptr -= mp.ch[ch].samplegen.looplength;
 
+				// Render the current sample
+
 				if(!mp.ch[ch].samplegen.muted) {
 					int vol = mp.ch[ch].samplegen.volume;
 
 #ifdef USE_LINEAR_INTERPOLATION
 					uint32_t nextptr = mp.ch[ch].samplegen.currentptr + 0x10000;
 					
-					if(nextptr >= mp.ch[ch].samplegen.length && mp.ch[ch].samplegen.looplength != 0)
+					while(nextptr >= mp.ch[ch].samplegen.length && mp.ch[ch].samplegen.looplength != 0)
 						nextptr -= mp.ch[ch].samplegen.looplength;
 
 					int sample1 = mp.ch[ch].samplegen.sample[mp.ch[ch].samplegen.currentptr >> 16] * vol;
