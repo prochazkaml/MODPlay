@@ -494,7 +494,7 @@ ModPlayerStatus_t *RenderMOD(short *buf, int len) {
 
 				// Advance to the next required sample
 
-				pch->currentsubptr += pch->period & 0xFFFF;
+				pch->currentsubptr += pch->period;
 
 				if(pch->currentsubptr >= 0x10000) {
 					pch->currentptr += pch->currentsubptr >> 16;
