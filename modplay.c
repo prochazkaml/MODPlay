@@ -51,7 +51,7 @@ static const int32_t arpeggio_table[16] = {
 };
 
 void _RecalculateWaveform(Oscillator_t *oscillator) {
-	int32_t result;
+	int32_t result = 0;
 
 	// The following generators _might_ have been inspired by micromod's code:
 	// https://github.com/martincameron/micromod/blob/master/micromod-c/micromod.c
@@ -563,7 +563,7 @@ ModPlayerStatus_t *InitMOD(const uint8_t *mod, uint32_t samplerate) {
 	}
 	mp.maxpattern++;
 
-	const int8_t *samplemem = mod + 1084 + 64 * 4 * mp.channels * mp.maxpattern;
+	const int8_t *samplemem = ((const int8_t *) mod) + 1084 + 64 * 4 * mp.channels * mp.maxpattern;
 	mp.patterndata = mod + 1084;
 
 	mp.sampleheaders = (SampleHeader_t *) (mod + 20);
