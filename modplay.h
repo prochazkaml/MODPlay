@@ -54,7 +54,9 @@ typedef struct /*__attribute__((packed))*/ {
 	uint8_t looplengthlo;
 } SampleHeader_t;
 
+#ifndef CHANNELS
 #define CHANNELS 32
+#endif
 
 typedef struct {
 	int channels, orders, maxpattern, order, row, tick, maxtick, speed,
