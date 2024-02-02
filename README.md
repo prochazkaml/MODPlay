@@ -25,19 +25,35 @@ Compiled with the default number of channels:
 
 |Compiler|Arch|.text|.data|.bss
 |-|-|-|-|-|
-|clang 16.0.6|amd64|9599|0|3152|
-|clang 16.0.6|i386|7607|0|2632|
-|clang 16.0.6|aarch64|9876|0|3152|
-|clang 16.0.6|armv7m|6046|0|2632|
+|clang 16.0.6 (-O0)|amd64|9599|0|3152|
+|clang 16.0.6 (-O3)|amd64|6101|0|3152|
+|clang 16.0.6 (-Os)|amd64|4938|0|3152|
+|clang 16.0.6 (-O0)|i386|7607|0|2632|
+|clang 16.0.6 (-O3)|i386|5461|0|2632|
+|clang 16.0.6 (-Os)|i386|4386|0|2632|
+|clang 16.0.6 (-O0)|aarch64|9876|0|3152|
+|clang 16.0.6 (-O3)|aarch64|5504|0|3152|
+|clang 16.0.6 (-Os)|aarch64|4536|0|3152|
+|clang 16.0.6 (-O0)|armv7m|6046|0|2632|
+|clang 16.0.6 (-O3)|armv7m|4664|0|2632|
+|clang 16.0.6 (-Os)|armv7m|3164|0|2632|
 
 Compiled for 4 channels maximum:
 
 |Compiler|Arch|.text|.data|.bss
 |-|-|-|-|-|
-|clang 16.0.6|amd64|9599|0|912|
-|clang 16.0.6|i386|7607|0|616|
-|clang 16.0.6|aarch64|9876|0|912|
-|clang 16.0.6|armv7m|6008|0|616|
+|clang 16.0.6 (-O0)|amd64|9599|0|912|
+|clang 16.0.6 (-O3)|amd64|6101|0|912|
+|clang 16.0.6 (-Os)|amd64|4938|0|912|
+|clang 16.0.6 (-O0)|i386|7607|0|616|
+|clang 16.0.6 (-O3)|i386|5461|0|616|
+|clang 16.0.6 (-Os)|i386|4391|0|616|
+|clang 16.0.6 (-O0)|aarch64|9876|0|912|
+|clang 16.0.6 (-O3)|aarch64|5568|0|912|
+|clang 16.0.6 (-Os)|aarch64|4536|0|912|
+|clang 16.0.6 (-O0)|armv7m|6008|0|616|
+|clang 16.0.6 (-O3)|armv7m|4712|0|616|
+|clang 16.0.6 (-Os)|armv7m|3172|0|616|
 
 <!-- LIBRARY_SIZE_END -->
 
