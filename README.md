@@ -18,6 +18,29 @@ to translate Paula parameters to the hardware's native parameters (e.g. the orig
 DO NOT USE BOTH AT ONCE! Only use the `RenderMOD()` method, or the `ProcessMOD()` method.
 `RenderMOD()` calls `ProcessMOD()` internally by itself, by calling both functions, the player will misbehave badly.
 
+## Library compiled size
+
+<!-- LIBRARY_SIZE_START -->
+Compiled with the default number of channels:
+
+|Compiler|Arch|.text|.data|.bss
+|-|-|-|-|-|
+|clang 16.0.6|amd64|9599|0|3152|
+|clang 16.0.6|i386|7607|0|2632|
+|clang 16.0.6|aarch64|9876|0|3152|
+|clang 16.0.6|armv7m|6046|0|2632|
+
+Compiled for 4 channels maximum:
+
+|Compiler|Arch|.text|.data|.bss
+|-|-|-|-|-|
+|clang 16.0.6|amd64|9599|0|912|
+|clang 16.0.6|i386|7607|0|616|
+|clang 16.0.6|aarch64|9876|0|912|
+|clang 16.0.6|armv7m|6008|0|616|
+
+<!-- LIBRARY_SIZE_END -->
+
 ## Supported effects
 
 The following list was taken from the [OpenMPT wiki](https://wiki.openmpt.org/Manual:_Effect_Reference#MOD_Effect_Commands).
